@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: acusticupc
+  datasource:
+    url: jdbc:postgresql://CHANGEME-supabase-host:5432/postgres
+    username: postgres
+    password: CHANGEME
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+acusticupc:
+  jwt:
+    secret: cambiar-en-produccion-con-minimo-32-caracteres-seguros-aleatorios
+    expiration-ms: 86400000
+  bootstrap:
+    admin-email: admin@upc.edu.co
+    admin-password: AdminUpc2026!
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.upc.acusticupc: DEBUG
