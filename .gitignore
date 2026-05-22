@@ -20,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local config con credenciales reales — cada dev tiene la suya
+backend/src/main/resources/application.yml
