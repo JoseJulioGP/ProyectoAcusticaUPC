@@ -19,16 +19,19 @@ public class AdminUserSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final String adminEmail;
+    private final String adminPassword;
 
-    @Value("${acusticupc.bootstrap.admin-email}")
-    private String adminEmail;
-
-    @Value("${acusticupc.bootstrap.admin-password}")
-    private String adminPassword;
-
-    public AdminUserSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AdminUserSeeder(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            @Value("${acusticupc.bootstrap.admin-email}") String adminEmail,
+            @Value("${acusticupc.bootstrap.admin-password}") String adminPassword
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.adminEmail = adminEmail;
+        this.adminPassword = adminPassword;
     }
 
     @Override
@@ -37,7 +40,6 @@ public class AdminUserSeeder implements CommandLineRunner {
             log.info(">>> Usuario admin ya existe ({}), no se reinserta.", adminEmail);
             return;
         }
-
         User admin = User.builder()
                 .fullName("Administrador AcústicaUPC")
                 .email(adminEmail.toLowerCase())
@@ -45,7 +47,6 @@ public class AdminUserSeeder implements CommandLineRunner {
                 .role(Role.ADMIN)
                 .active(true)
                 .build();
-
         userRepository.save(admin);
         log.info(">>> Usuario admin sembrado: {}", adminEmail);
     }
