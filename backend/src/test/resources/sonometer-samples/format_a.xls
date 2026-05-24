@@ -1,0 +1,9 @@
+StartTime	14-04-2026,20:15:00
+Max	60.50 @ ... dBA
+Min	40.20 @ ... dBA
+Average	50.30
+SampleRate	1.00
+ID	Unit	Value	DateTime
+1	dBA	54.60	14-04-2026,20:15:43
+2	dBA	55.20	14-04-2026,20:15:44
+3	dBA	53.80	14-04-2026,20:15:45
