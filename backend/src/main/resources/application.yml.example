@@ -8,10 +8,23 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      hibernate.jdbc.batch_versioned_data: true
     open-in-view: false
   flyway:
     enabled: true
     baseline-on-migrate: true
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB  
 
 acusticupc:
   jwt:
