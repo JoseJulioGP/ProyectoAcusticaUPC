@@ -2,10 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, MapPin, Upload, ShieldCheck, Volume2 } from 'lucide-react';
 
 const NAV = [
-  { to: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
-  { to: '/zones',      label: 'Zonas',      icon: MapPin,        disabled: true },
-  { to: '/ingest',     label: 'Ingesta',    icon: Upload,        disabled: true },
-  { to: '/compliance', label: 'Cumplimiento', icon: ShieldCheck, disabled: true },
+  { to: '/dashboard',  label: 'Dashboard',    icon: LayoutDashboard },
+  { to: '/zones',      label: 'Zonas',        icon: MapPin,        disabled: true },
+  { to: '/ingest',     label: 'Ingesta',      icon: Upload },
+  { to: '/compliance', label: 'Cumplimiento', icon: ShieldCheck,   disabled: true },
 ];
 
 export default function Sidebar() {
@@ -46,7 +46,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-5 py-3 text-xs text-slate-500 border-t border-slate-800">
-        v0.1.0 — Sprint 1
+        v0.2.0 — Sprint 2
       </div>
     </aside>
   );
