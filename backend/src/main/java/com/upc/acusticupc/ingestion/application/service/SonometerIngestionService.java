@@ -10,10 +10,8 @@ import com.upc.acusticupc.shared.exception.DomainException;
 import com.upc.acusticupc.shared.exception.ResourceNotFoundException;
 import com.upc.acusticupc.sonometry.application.service.PeriodResolver;
 import com.upc.acusticupc.sonometry.domain.model.BatchStatus;
-import com.upc.acusticupc.sonometry.domain.model.Measurement;
 import com.upc.acusticupc.sonometry.domain.model.MeasurementBatch;
 import com.upc.acusticupc.sonometry.domain.repository.MeasurementBatchRepository;
-import com.upc.acusticupc.sonometry.domain.repository.MeasurementRepository;
 import com.upc.acusticupc.zones.domain.model.Zone;
 import com.upc.acusticupc.zones.domain.repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +29,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,14 +46,12 @@ import java.util.UUID;
 public class SonometerIngestionService {
 
     private final MeasurementBatchRepository batchRepository;
-    private final MeasurementRepository measurementRepository;
     private final ZoneRepository zoneRepository;
     private final UserRepository userRepository;
     private final ExcelFormatDetector formatDetector;
     private final List<SonometerParser> parsers;
     private final PeriodResolver periodResolver;
-
-    private static final int BATCH_INSERT_SIZE = 500;
+    private final MeasurementBulkPersister bulkPersister;
 
     /**
      * Llamado sincrónicamente por el controller. Crea el batch y devuelve su UUID
@@ -93,7 +88,7 @@ public class SonometerIngestionService {
             markStatus(batchId, BatchStatus.PROCESSING, null);
 
             ParseResult result = parseFile(tempPath);
-            int validInserted = persistMeasurements(batchId, result.measurements());
+            int validInserted = bulkPersister.persist(batchId, result.measurements());
 
             completeBatch(batchId, result.totalRows(), validInserted, result.rejectedRows());
             log.info("Batch {} completado: {} válidas, {} rechazadas",
@@ -146,41 +141,6 @@ public class SonometerIngestionService {
                 .filter(p -> p.supportedFormat() == format)
                 .findFirst()
                 .orElseThrow(() -> new DomainException("No hay parser para el formato " + format));
-    }
-
-    @Transactional
-    protected int persistMeasurements(UUID batchId, List<ParsedMeasurement> measurements) {
-        MeasurementBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new ResourceNotFoundException("Batch", batchId));
-
-        List<Measurement> buffer = new ArrayList<>(BATCH_INSERT_SIZE);
-        int totalInserted = 0;
-
-        for (ParsedMeasurement pm : measurements) {
-            OffsetDateTime measuredAt = periodResolver.toColombiaOffset(pm.capturedAt());
-            Measurement m = Measurement.builder()
-                    .batch(batch)
-                    .zone(batch.getZone())
-                    .dbValue(pm.dbValue())
-                    .unit(pm.unit())
-                    .measuredAt(measuredAt)
-                    .period(periodResolver.resolve(pm.capturedAt()))
-                    .build();
-            buffer.add(m);
-
-            if (buffer.size() >= BATCH_INSERT_SIZE) {
-                measurementRepository.saveAll(buffer);
-                totalInserted += buffer.size();
-                buffer.clear();
-                log.debug("Batch {}: insertadas {} mediciones acumuladas", batchId, totalInserted);
-            }
-        }
-        if (!buffer.isEmpty()) {
-            measurementRepository.saveAll(buffer);
-            totalInserted += buffer.size();
-        }
-        log.info("Batch {}: total persistido = {}", batchId, totalInserted);
-        return totalInserted;
     }
 
     @Transactional
