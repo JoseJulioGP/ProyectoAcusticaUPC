@@ -35,7 +35,7 @@ public class PeriodResolver {
     }
 
     public Period resolve(OffsetDateTime capturedAt) {
-        return resolve(capturedAt.toLocalDateTime());
+        return resolve(capturedAt.withOffsetSameInstant(COLOMBIA_OFFSET).toLocalDateTime());
     }
 
     /** Convierte un LocalDateTime del parser a OffsetDateTime con la zona de Colombia. */
