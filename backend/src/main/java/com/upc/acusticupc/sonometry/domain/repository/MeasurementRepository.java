@@ -17,6 +17,7 @@ public interface MeasurementRepository extends JpaRepository<Measurement, UUID> 
         UUID zoneId, OffsetDateTime from, OffsetDateTime to);
 
     long countByBatchId(UUID batchId);
+    List<Measurement> findByBatchId(UUID batchId);
 
     Page<Measurement> findByBatchId(UUID batchId, Pageable pageable);
 }
