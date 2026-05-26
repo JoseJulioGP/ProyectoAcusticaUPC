@@ -4,6 +4,10 @@ import { ingestionApi } from "../api/ingestionApi";
 import BatchStatusBadge from "../components/BatchStatusBadge";
 import MeasurementsTable from "../components/MeasurementsTable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useComplianceResult } from "../../compliance/hooks/useComplianceResult";
+import { complianceApi } from "../../compliance/api/complianceApi";
+import ComplianceResultCard from "../../compliance/components/ComplianceResultCard";
+import { useAuth } from "../../auth/hooks/useAuth";
 
 export default function BatchDetailPage() {
   const { batchId } = useParams();
@@ -11,6 +15,14 @@ export default function BatchDetailPage() {
   const [page, setPage] = useState({ content: [], page: 0, totalPages: 0, totalElements: 0, last: true });
   const [pageNum, setPageNum] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const {
+    results: complianceResults,
+    loading: cLoading,
+    refresh: refreshCompliance,
+  } = useComplianceResult(batchId);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     ingestionApi.get(batchId).then(setBatch);
@@ -23,6 +35,22 @@ export default function BatchDetailPage() {
       .then(setPage)
       .finally(() => setLoading(false));
   }, [batchId, pageNum]);
+
+  async function handleEvaluate() {
+    await complianceApi.evaluateBatch(batchId);
+
+    let attempts = 0;
+
+    const interval = setInterval(async () => {
+      attempts += 1;
+      const res = await complianceApi.getByBatch(batchId);
+
+      if (res.length > 0 || attempts >= 15) {
+        refreshCompliance();
+        clearInterval(interval);
+      }
+    }, 2000);
+  }
 
   if (!batch) return <div className="text-slate-500">Cargando batch…</div>;
 
@@ -63,6 +91,36 @@ export default function BatchDetailPage() {
             {batch.errorMessage}
           </div>
         )}
+
+        <section className="mt-6">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-semibold">Cumplimiento Res. 627</h2>
+
+            {isAdmin && complianceResults.length === 0 && !cLoading && (
+              <button
+                onClick={handleEvaluate}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1.5 rounded"
+              >
+                Calcular cumplimiento
+              </button>
+            )}
+          </div>
+
+          {cLoading && <div className="text-gray-400 text-sm">Cargando...</div>}
+
+          {complianceResults.length === 0 && !cLoading && (
+            <p className="text-gray-500 text-sm">
+              Aun no se ha evaluado el cumplimiento de este batch.
+              {isAdmin ? "" : " Pidele a un administrador que lo dispare."}
+            </p>
+          )}
+
+          <div className="grid gap-3">
+            {complianceResults.map((r) => (
+              <ComplianceResultCard key={r.id} result={r} />
+            ))}
+          </div>
+        </section>
       </div>
 
       <div>
