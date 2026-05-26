@@ -42,16 +42,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
-            );
-        } catch (BadCredentialsException e) {
-            throw new DomainException("Credenciales inválidas");
-        }
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+        );
 
         User user = userRepository.findByEmailIgnoreCase(request.email())
-                .orElseThrow(() -> new DomainException("Credenciales inválidas"));
+                .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
         if (!user.canOperate()) {
             throw new DomainException("La cuenta está inactiva");
