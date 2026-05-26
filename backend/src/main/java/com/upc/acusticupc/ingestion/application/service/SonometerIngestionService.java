@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,8 +38,9 @@ import java.util.UUID;
  *  1. Crea el batch en estado PENDING.
  *  2. Dispara procesamiento @Async con virtual threads.
  *  3. Detecta formato → selecciona parser → parsea.
- *  4. Persiste mediciones en lotes.
- *  5. Actualiza el batch a COMPLETED o FAILED.
+ *  4. Filtra mediciones con año inválido (YearRangeValidator).
+ *  5. Persiste mediciones válidas en lotes.
+ *  6. Actualiza el batch a COMPLETED o FAILED.
  */
 @Service
 @RequiredArgsConstructor
@@ -52,6 +54,7 @@ public class SonometerIngestionService {
     private final List<SonometerParser> parsers;
     private final PeriodResolver periodResolver;
     private final MeasurementBulkPersister bulkPersister;
+    private final YearRangeValidator yearValidator;
 
     /**
      * Llamado sincrónicamente por el controller. Crea el batch y devuelve su UUID
@@ -88,11 +91,27 @@ public class SonometerIngestionService {
             markStatus(batchId, BatchStatus.PROCESSING, null);
 
             ParseResult result = parseFile(tempPath);
-            int validInserted = bulkPersister.persist(batchId, result.measurements());
 
-            completeBatch(batchId, result.totalRows(), validInserted, result.rejectedRows());
-            log.info("Batch {} completado: {} válidas, {} rechazadas",
-                    batchId, validInserted, result.rejectedRows());
+            // Filtrar mediciones con anio fuera del rango permitido
+            List<ParsedMeasurement> valid = new ArrayList<>();
+            int yearRejections = 0;
+            for (ParsedMeasurement pm : result.measurements()) {
+                if (yearValidator.isValid(pm)) {
+                    valid.add(pm);
+                } else {
+                    yearRejections++;
+                }
+            }
+            if (yearRejections > 0) {
+                log.warn("Batch {}: {} mediciones rechazadas por anio invalido", batchId, yearRejections);
+            }
+
+            int validInserted = bulkPersister.persist(batchId, valid);
+            int totalRejected = result.rejectedRows() + yearRejections;
+
+            completeBatch(batchId, result.totalRows(), validInserted, totalRejected);
+            log.info("Batch {} completado: {} válidas, {} rechazadas (parser: {}, año: {})",
+                    batchId, validInserted, totalRejected, result.rejectedRows(), yearRejections);
         } catch (Exception e) {
             log.error("Batch {} falló: {}", batchId, e.getMessage(), e);
             markStatus(batchId, BatchStatus.FAILED, e.getMessage());
