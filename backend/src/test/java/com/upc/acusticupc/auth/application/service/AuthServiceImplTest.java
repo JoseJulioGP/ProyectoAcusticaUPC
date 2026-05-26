@@ -66,9 +66,8 @@ class AuthServiceImplTest {
     void shouldThrowWhenCredentialsAreInvalid() {
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("bad"));
 
-        DomainException ex = assertThrows(DomainException.class,
+        assertThrows(BadCredentialsException.class,
                 () -> service.login(new LoginRequest("admin@upc.edu.co", "wrong")));
-        assertEquals("Credenciales inválidas", ex.getMessage());
     }
 
     @Test

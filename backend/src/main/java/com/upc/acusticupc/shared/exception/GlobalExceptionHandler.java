@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,6 +39,13 @@ public class GlobalExceptionHandler {
             .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
             ApiError.of(400, "Validation Error", msg, req.getRequestURI()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex, HttpServletRequest req) {
+        log.warn("Credenciales inválidas en {}", req.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            ApiError.of(401, "Unauthorized", "Credenciales inválidas", req.getRequestURI()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
