@@ -5,6 +5,7 @@ import IngestionPage from '../features/ingestion/pages/IngestionPage';
 import BatchDetailPage from '../features/ingestion/pages/BatchDetailPage';
 import ProtectedRoute from '../features/auth/components/ProtectedRoute';
 import Layout from '../shared/components/Layout';
+import AlertsPage from "../features/compliance/pages/AlertsPage";
 
 export default function AppRouter() {
   return (
@@ -40,6 +41,17 @@ export default function AppRouter() {
             <ProtectedRoute>
               <Layout>
                 <BatchDetailPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/compliance"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AlertsPage />
               </Layout>
             </ProtectedRoute>
           }
