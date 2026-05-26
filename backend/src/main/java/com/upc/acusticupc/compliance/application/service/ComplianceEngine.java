@@ -42,11 +42,12 @@ public class ComplianceEngine {
      * mediciones, calcula LAeq + L90, compara con el estandar aplicable, y persiste
      * un ComplianceResult + opcionalmente un Alert.
      *
-     * @return la lista de ComplianceResult persistidos (1 o 2 elementos)
+     * Fire-and-forget: @Async exige retorno void o Future, por eso no devuelve
+     * la lista. Los resultados se consultan via GET /compliance/results/batch/{id}.
      */
     @Async
     @Transactional
-    public List<ComplianceResult> evaluateBatch(UUID batchId) {
+    public void evaluateBatch(UUID batchId) {
         MeasurementBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch", batchId));
 
@@ -64,12 +65,12 @@ public class ComplianceEngine {
             byPeriod.computeIfAbsent(m.getPeriod(), p -> new ArrayList<>()).add(m);
         }
 
-        List<ComplianceResult> results = new ArrayList<>();
+        int evaluated = 0;
         for (Map.Entry<Period, List<Measurement>> e : byPeriod.entrySet()) {
-            ComplianceResult r = evaluatePeriod(batch, zone, e.getKey(), e.getValue());
-            results.add(r);
+            evaluatePeriod(batch, zone, e.getKey(), e.getValue());
+            evaluated++;
         }
-        return results;
+        log.info("Cumplimiento batch={} evaluado: {} period(s)", batchId, evaluated);
     }
 
     private ComplianceResult evaluatePeriod(MeasurementBatch batch, Zone zone,
