@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
@@ -46,6 +47,7 @@ public class ComplianceController {
      */
     @GetMapping("/results/batch/{batchId}")
     @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+    @Transactional(readOnly = true)
     public List<ComplianceResultDTO> getByBatch(@PathVariable UUID batchId) {
         return resultRepository.findByBatchId(batchId).stream()
                 .map(ComplianceResultDTO::from)
@@ -57,6 +59,7 @@ public class ComplianceController {
      */
     @GetMapping("/results")
     @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+    @Transactional(readOnly = true)
     public Page<ComplianceResultDTO> listResults(
             @RequestParam UUID zoneId,
             @RequestParam OffsetDateTime from,
@@ -72,6 +75,7 @@ public class ComplianceController {
      */
     @GetMapping("/alerts")
     @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+    @Transactional(readOnly = true)
     public Page<AlertDTO> listAlerts(
             @RequestParam(required = false) UUID zoneId,
             @RequestParam OffsetDateTime from,
