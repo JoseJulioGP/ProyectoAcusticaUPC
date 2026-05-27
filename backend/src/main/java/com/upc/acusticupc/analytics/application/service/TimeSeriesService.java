@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -44,8 +45,7 @@ public class TimeSeriesService {
 
         List<TimeSeriesPointDTO> result = new ArrayList<>(rows.size());
         for (Object[] r : rows) {
-            // bucket viene como java.sql.Timestamp desde native query
-            OffsetDateTime bucket = ((Timestamp) r[0]).toInstant().atOffset(ZoneOffset.of("-05:00"));
+            OffsetDateTime bucket = toColombiaOffset(r[0]);
             UUID zId = (UUID) r[1];
             double laeq = ((Number) r[2]).doubleValue();
             long count = ((Number) r[3]).longValue();
@@ -65,5 +65,21 @@ public class TimeSeriesService {
 
     private double round1(double v) {
         return Math.round(v * 10.0) / 10.0;
+    }
+
+    /**
+     * El bucket de date_trunc sobre una columna timestamptz puede llegar como
+     * Instant (driver pg moderno), Timestamp (legacy) u OffsetDateTime. Se normaliza
+     * todo al offset de Colombia.
+     */
+    private static OffsetDateTime toColombiaOffset(Object raw) {
+        ZoneOffset co = ZoneOffset.of("-05:00");
+        return switch (raw) {
+            case Instant ins -> ins.atOffset(co);
+            case Timestamp ts -> ts.toInstant().atOffset(co);
+            case OffsetDateTime odt -> odt.withOffsetSameInstant(co);
+            case null -> throw new IllegalStateException("bucket nulo en serie temporal");
+            default -> OffsetDateTime.parse(raw.toString());
+        };
     }
 }

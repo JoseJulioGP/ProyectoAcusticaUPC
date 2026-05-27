@@ -45,7 +45,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
     @Query(value = """
         SELECT m.zone_id              AS zone_id,
                m.period               AS period,
-               10 * log(10, avg(power(10, m.db_value / 10.0))) AS laeq_db,
+               10 * log(avg(power(10, m.db_value / 10.0))) AS laeq_db,
                count(*)               AS sample_count
         FROM measurements m
         WHERE m.measured_at BETWEEN :from AND :to
@@ -77,7 +77,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
     @Query(value = """
     SELECT date_trunc(:unit, m.measured_at)                              AS bucket,
            m.zone_id                                                      AS zone_id,
-           10 * log(10, avg(power(10, m.db_value / 10.0)))                AS laeq_db,
+           10 * log(avg(power(10, m.db_value / 10.0)))                    AS laeq_db,
            count(*)                                                       AS sample_count,
            m.period                                                       AS period
     FROM measurements m
@@ -101,7 +101,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
     @Query(value = """
     SELECT m.zone_id                                            AS zone_id,
            EXTRACT(HOUR FROM m.measured_at)::int                AS hour_of_day,
-           10 * log(10, avg(power(10, m.db_value / 10.0)))      AS laeq_db,
+           10 * log(avg(power(10, m.db_value / 10.0)))          AS laeq_db,
            count(*)                                             AS sample_count
     FROM measurements m
     WHERE m.measured_at BETWEEN :from AND :to
