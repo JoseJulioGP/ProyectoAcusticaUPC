@@ -59,13 +59,13 @@ public class ZoneStatsService {
 
             NoiseStandard stdDia = noiseStandardRepository
                     .findBySectorAndSubsectorAndPeriodAndStandardType(
-                            z.getSector(), z.getSubsector(), Period.DIURNO, StandardType.AMBIENTAL)
+                            z.getSector(), z.getSubsector(), Period.DIURNO, StandardType.AMBIENT)
                     .orElseThrow(() -> new IllegalStateException(
                             "No hay estandar AMBIENTAL DIURNO para zona " + z.getName()));
 
             NoiseStandard stdNoche = noiseStandardRepository
                     .findBySectorAndSubsectorAndPeriodAndStandardType(
-                            z.getSector(), z.getSubsector(), Period.NOCTURNO, StandardType.AMBIENTAL)
+                            z.getSector(), z.getSubsector(), Period.NOCTURNO, StandardType.AMBIENT)
                     .orElseThrow(() -> new IllegalStateException(
                             "No hay estandar AMBIENTAL NOCTURNO para zona " + z.getName()));
 
