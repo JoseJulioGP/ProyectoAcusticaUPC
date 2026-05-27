@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface MeasurementBatchRepository extends JpaRepository<MeasurementBatch, UUID> {
 
     List<MeasurementBatch> findByStatusOrderByUploadedAtDesc(BatchStatus status);
+    List<MeasurementBatch> findTop5ByZoneIdOrderByUploadedAtDesc(UUID zoneId);
 }
