@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/analytics")
+@RequestMapping("/api/v1/analytics")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
 public class AnalyticsController {
