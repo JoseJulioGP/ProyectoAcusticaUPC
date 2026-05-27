@@ -24,6 +24,9 @@ public class AnalyticsController {
     private final ZoneStatsService zoneStatsService;
     private final AlertStatsService alertStatsService;
     private final ZoneDetailService zoneDetailService;
+    private final TimeSeriesService timeSeriesService;
+    private final HeatmapService heatmapService;
+    private final ZoneComparisonService zoneComparisonService;
 
     @GetMapping("/kpis")
     @Timed("analytics.kpis")
@@ -63,6 +66,46 @@ public class AnalyticsController {
     ) {
         var range = defaultRange(from, to);
         return ResponseEntity.ok(alertStatsService.summary(range.from, range.to));
+    }
+
+    @GetMapping("/timeseries")
+    @Timed("analytics.timeseries")
+    public ResponseEntity<List<TimeSeriesPointDTO>> timeSeries(
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to,
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam(required = false) Period period,
+            @RequestParam(defaultValue = "HOUR") Granularity granularity
+    ) {
+        var range = defaultRange(from, to);
+        return ResponseEntity.ok(
+                timeSeriesService.series(range.from(), range.to(), zoneId, period, granularity)
+        );
+    }
+
+    @GetMapping("/heatmap")
+    @Timed("analytics.heatmap")
+    public ResponseEntity<HeatmapDTO> heatmap(
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to,
+            @RequestParam(required = false) Period period
+    ) {
+        var range = defaultRange(from, to);
+        return ResponseEntity.ok(heatmapService.buildHeatmap(range.from(), range.to(), period));
+    }
+
+    @GetMapping("/comparison")
+    @Timed("analytics.comparison")
+    public ResponseEntity<List<ZoneComparisonDTO>> comparison(
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to,
+            @RequestParam(required = false) List<UUID> zoneIds,
+            @RequestParam(required = false) Period period
+    ) {
+        var range = defaultRange(from, to);
+        return ResponseEntity.ok(
+                zoneComparisonService.compare(range.from(), range.to(), zoneIds, period)
+        );
     }
 
     // --- default range helper ---
