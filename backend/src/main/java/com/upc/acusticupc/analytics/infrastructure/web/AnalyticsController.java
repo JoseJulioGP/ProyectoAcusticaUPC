@@ -24,6 +24,9 @@ public class AnalyticsController {
     private final ZoneStatsService zoneStatsService;
     private final AlertStatsService alertStatsService;
     private final ZoneDetailService zoneDetailService;
+    private final TimeSeriesService timeSeriesService;
+    private final HeatmapService heatmapService;
+    private final ZoneComparisonService zoneComparisonService;
 
     @GetMapping("/kpis")
     @Timed("analytics.kpis")
