@@ -38,4 +38,5 @@ public interface AlertStatsRepository extends JpaRepository<Alert, UUID> {
                                   org.springframework.data.domain.Pageable pageable);
 
     long countByTriggeredAtBetween(OffsetDateTime from, OffsetDateTime to);
+    List<Alert> findTop10ByZoneIdOrderByTriggeredAtDesc(UUID zoneId);
 }
