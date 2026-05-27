@@ -68,6 +68,21 @@ public class AnalyticsController {
         return ResponseEntity.ok(alertStatsService.summary(range.from, range.to));
     }
 
+    @GetMapping("/timeseries")
+    @Timed("analytics.timeseries")
+    public ResponseEntity<List<TimeSeriesPointDTO>> timeSeries(
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to,
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam(required = false) Period period,
+            @RequestParam(defaultValue = "HOUR") Granularity granularity
+    ) {
+        var range = defaultRange(from, to);
+        return ResponseEntity.ok(
+                timeSeriesService.series(range.from(), range.to(), zoneId, period, granularity)
+        );
+    }
+
     // --- default range helper ---
     private record Range(OffsetDateTime from, OffsetDateTime to) {}
 
