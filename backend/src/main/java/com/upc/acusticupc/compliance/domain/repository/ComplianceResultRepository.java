@@ -1,6 +1,7 @@
 package com.upc.acusticupc.compliance.domain.repository;
 
 import com.upc.acusticupc.compliance.domain.model.ComplianceResult;
+import com.upc.acusticupc.compliance.domain.model.ComplianceStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,8 @@ public interface ComplianceResultRepository extends JpaRepository<ComplianceResu
 
     Page<ComplianceResult> findByZoneIdAndEvaluatedAtBetween(
         UUID zoneId, OffsetDateTime from, OffsetDateTime to, Pageable pageable);
+
+    long countByEvaluatedAtBetween(OffsetDateTime from, OffsetDateTime to);
+
+    long countByEvaluatedAtBetweenAndStatus(OffsetDateTime from, OffsetDateTime to, ComplianceStatus status);
 }
