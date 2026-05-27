@@ -94,6 +94,20 @@ public class AnalyticsController {
         return ResponseEntity.ok(heatmapService.buildHeatmap(range.from(), range.to(), period));
     }
 
+    @GetMapping("/comparison")
+    @Timed("analytics.comparison")
+    public ResponseEntity<List<ZoneComparisonDTO>> comparison(
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to,
+            @RequestParam(required = false) List<UUID> zoneIds,
+            @RequestParam(required = false) Period period
+    ) {
+        var range = defaultRange(from, to);
+        return ResponseEntity.ok(
+                zoneComparisonService.compare(range.from(), range.to(), zoneIds, period)
+        );
+    }
+
     // --- default range helper ---
     private record Range(OffsetDateTime from, OffsetDateTime to) {}
 
