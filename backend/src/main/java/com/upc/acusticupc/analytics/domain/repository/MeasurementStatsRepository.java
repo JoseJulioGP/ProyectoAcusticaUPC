@@ -92,4 +92,23 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
                                   @Param("to") OffsetDateTime to,
                                   @Param("zoneId") UUID zoneId,
                                   @Param("period") String period);
+
+
+    /**
+     * Heatmap: LAeq por zona x hora del día (0..23) en el rango.
+     * Devuelve [zoneId, hour, laeqDb, sampleCount].
+     */
+    @Query(value = """
+    SELECT m.zone_id                                            AS zone_id,
+           EXTRACT(HOUR FROM m.measured_at)::int                AS hour_of_day,
+           10 * log(10, avg(power(10, m.db_value / 10.0)))      AS laeq_db,
+           count(*)                                             AS sample_count
+    FROM measurements m
+    WHERE m.measured_at BETWEEN :from AND :to
+      AND (:period IS NULL OR m.period = :period)
+    GROUP BY m.zone_id, EXTRACT(HOUR FROM m.measured_at)
+    """, nativeQuery = true)
+    List<Object[]> laeqByZoneAndHour(@Param("from") OffsetDateTime from,
+                                     @Param("to") OffsetDateTime to,
+                                     @Param("period") String period);
 }
