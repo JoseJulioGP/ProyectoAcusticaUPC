@@ -83,6 +83,17 @@ public class AnalyticsController {
         );
     }
 
+    @GetMapping("/heatmap")
+    @Timed("analytics.heatmap")
+    public ResponseEntity<HeatmapDTO> heatmap(
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to,
+            @RequestParam(required = false) Period period
+    ) {
+        var range = defaultRange(from, to);
+        return ResponseEntity.ok(heatmapService.buildHeatmap(range.from(), range.to(), period));
+    }
+
     // --- default range helper ---
     private record Range(OffsetDateTime from, OffsetDateTime to) {}
 
