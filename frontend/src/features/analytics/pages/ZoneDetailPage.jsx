@@ -11,7 +11,7 @@ export default function ZoneDetailPage() {
     setLoading(true);
     analyticsApi
       .zoneDetail(zoneId, { from: undefined, to: undefined })
-      .then((r) => setData(r.data))
+      .then((r) => setData(r))
       .finally(() => setLoading(false));
   }, [zoneId]);
 
@@ -77,7 +77,8 @@ export default function ZoneDetailPage() {
                 >
                   {a.severity}
                 </span>
-                {a.message} · {new Date(a.createdAt).toLocaleString("es-CO")}
+                {" "}
+                {`${a.measuredDb} dB (límite ${a.standardDb} dB, exceso +${a.excessDb} dB)`} · {new Date(a.triggeredAt).toLocaleString("es-CO")}
               </li>
             ))}
           </ul>

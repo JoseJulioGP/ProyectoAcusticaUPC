@@ -15,7 +15,7 @@ export function useKpis() {
     analyticsApi
       .kpis({ from, to, zoneId, period })
       .then((res) => {
-        if (!cancelled) setData(res.data);
+        if (!cancelled) setData(res);
       })
       .catch((err) => {
         if (!cancelled) setError(err);

@@ -4,7 +4,6 @@ import KpiCard from "../components/KpiCard";
 import LaeqTimeSeriesChart from "../components/LaeqTimeSeriesChart";
 import ZoneComparisonBars from "../components/ZoneComparisonBars";
 import HeatmapGrid from "../components/HeatmapGrid";
-import AlertsBadgeList from "../components/AlertsBadgeList";
 import { useKpis } from "../hooks/useKpis";
 import { useZonesStats } from "../hooks/useZonesStats";
 import { Link } from "react-router-dom";

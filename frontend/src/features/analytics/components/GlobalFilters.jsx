@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDashboardFilter } from "../context/DashboardFilterContext";
-import apiClient from "@/api/apiClient";
+import apiClient from "../../../shared/api/apiClient";
 
 const presets = [
   { id: "7d", label: "Últimos 7 días" },
