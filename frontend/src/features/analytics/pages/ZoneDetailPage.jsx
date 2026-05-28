@@ -1,19 +1,22 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { analyticsApi } from "../api/analyticsApi";
 
 export default function ZoneDetailPage() {
   const { zoneId } = useParams();
+  const [searchParams] = useSearchParams();           // FIX
+  const from = searchParams.get("from") || undefined;  // FIX
+  const to = searchParams.get("to") || undefined;      // FIX
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     analyticsApi
-      .zoneDetail(zoneId, { from: undefined, to: undefined })
+      .zoneDetail(zoneId, { from, to })                 // FIX
       .then((r) => setData(r))
       .finally(() => setLoading(false));
-  }, [zoneId]);
+  }, [zoneId, from, to]);                               // FIX
 
   if (loading) return <div className="p-6">Cargando...</div>;
   if (!data) return <div className="p-6">No se encontró la zona</div>;
