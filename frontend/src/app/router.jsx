@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '../features/auth/pages/LoginPage';
-import DashboardPage from '../features/dashboard/pages/DashboardPage';
+import DashboardPage from '../features/analytics/pages/DashboardPage';
+import ZoneDetailPage from '../features/analytics/pages/ZoneDetailPage';
 import IngestionPage from '../features/ingestion/pages/IngestionPage';
 import BatchDetailPage from '../features/ingestion/pages/BatchDetailPage';
 import ProtectedRoute from '../features/auth/components/ProtectedRoute';
@@ -12,7 +13,6 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-
         <Route
           path="/dashboard"
           element={
@@ -23,7 +23,16 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/dashboard/zones/:zoneId"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ZoneDetailPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/ingest"
           element={
@@ -34,7 +43,6 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/ingest/:batchId"
           element={
@@ -45,7 +53,6 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/compliance"
           element={
@@ -56,7 +63,6 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
-
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
