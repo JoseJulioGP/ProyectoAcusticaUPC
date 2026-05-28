@@ -9,7 +9,7 @@ import { useZonesStats } from "../hooks/useZonesStats";
 import { Link } from "react-router-dom";
 
 function DashboardContent() {
-  const { period } = useDashboardFilter();
+  const { period, from, to } = useDashboardFilter();
   const { data: kpis, loading: kpisLoading } = useKpis();
   const { data: zonesStats, loading: zonesLoading } = useZonesStats();
 
@@ -79,7 +79,7 @@ function DashboardContent() {
             {zonesStats.map((z) => (
               <Link
                 key={z.zoneId}
-                to={`/dashboard/zones/${z.zoneId}`}
+                to={`/dashboard/zones/${z.zoneId}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`}
                 className="block p-3 border border-slate-200 rounded hover:bg-slate-50"
               >
                 <div className="flex justify-between items-start">
