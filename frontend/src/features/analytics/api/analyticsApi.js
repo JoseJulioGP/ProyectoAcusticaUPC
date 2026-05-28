@@ -1,35 +1,54 @@
 import apiClient from "../../../shared/api/apiClient";
 
-const BASE = "/analytics";
-
 export const analyticsApi = {
-  kpis: ({ from, to, zoneId, period }) =>
-    apiClient.get(`${BASE}/kpis`, { params: { from, to, zoneId, period } }),
+  kpis({ from, to, zoneId, period } = {}) {
+    return apiClient
+      .get("/analytics/kpis", { params: { from, to, zoneId, period } })
+      .then((r) => r.data);
+  },
 
-  zonesStats: ({ from, to }) =>
-    apiClient.get(`${BASE}/zones/stats`, { params: { from, to } }),
+  zonesStats({ from, to } = {}) {
+    return apiClient
+      .get("/analytics/zones/stats", { params: { from, to } })
+      .then((r) => r.data);
+  },
 
-  zoneDetail: (zoneId, { from, to }) =>
-    apiClient.get(`${BASE}/zones/${zoneId}`, { params: { from, to } }),
+  zoneDetail(zoneId, { from, to } = {}) {
+    return apiClient
+      .get(`/analytics/zones/${zoneId}`, { params: { from, to } })
+      .then((r) => r.data);
+  },
 
-  alertsSummary: ({ from, to }) =>
-    apiClient.get(`${BASE}/alerts/summary`, { params: { from, to } }),
+  alertsSummary({ from, to } = {}) {
+    return apiClient
+      .get("/analytics/alerts/summary", { params: { from, to } })
+      .then((r) => r.data);
+  },
 
-  timeseries: ({ from, to, zoneId, period, granularity = "HOUR" }) =>
-    apiClient.get(`${BASE}/timeseries`, {
-      params: { from, to, zoneId, period, granularity },
-    }),
+  timeseries({ from, to, zoneId, period, granularity = "HOUR" } = {}) {
+    return apiClient
+      .get("/analytics/timeseries", {
+        params: { from, to, zoneId, period, granularity },
+      })
+      .then((r) => r.data);
+  },
 
-  heatmap: ({ from, to, period }) =>
-    apiClient.get(`${BASE}/heatmap`, { params: { from, to, period } }),
+  heatmap({ from, to, period } = {}) {
+    return apiClient
+      .get("/analytics/heatmap", { params: { from, to, period } })
+      .then((r) => r.data);
+  },
 
-  comparison: ({ from, to, zoneIds, period }) =>
-    apiClient.get(`${BASE}/comparison`, {
-      params: {
-        from,
-        to,
-        zoneIds: zoneIds && zoneIds.length ? zoneIds.join(",") : undefined,
-        period,
-      },
-    }),
+  comparison({ from, to, zoneIds, period } = {}) {
+    return apiClient
+      .get("/analytics/comparison", {
+        params: {
+          from,
+          to,
+          zoneIds: zoneIds && zoneIds.length ? zoneIds.join(",") : undefined,
+          period,
+        },
+      })
+      .then((r) => r.data);
+  },
 };
