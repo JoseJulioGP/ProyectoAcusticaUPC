@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.upc.acusticupc.auth.application.service.UserManagementService.*;
+
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -61,5 +63,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
             ApiError.of(500, "Internal Server Error",
                 "Ocurrió un error inesperado", req.getRequestURI()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> badArgument(IllegalArgumentException ex, HttpServletRequest req) {
+        log.warn("Argumento inválido: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiError.of(400, "Bad Request", ex.getMessage(), req.getRequestURI()));
     }
 }
