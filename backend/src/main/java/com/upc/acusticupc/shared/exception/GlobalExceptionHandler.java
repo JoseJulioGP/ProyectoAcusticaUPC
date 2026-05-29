@@ -79,4 +79,11 @@ public class GlobalExceptionHandler {
                 ApiError.of(404, "Not Found", ex.getMessage(), req.getRequestURI()));
     }
 
+    @ExceptionHandler(EmailAlreadyUsedException.class)
+    public ResponseEntity<ApiError> emailUsed(EmailAlreadyUsedException ex, HttpServletRequest req) {
+        log.warn("Email duplicado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.of(409, "Conflict", ex.getMessage(), req.getRequestURI()));
+    }
+
 }
