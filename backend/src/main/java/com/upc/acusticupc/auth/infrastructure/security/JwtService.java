@@ -19,7 +19,7 @@ public class JwtService {
     private final long expirationMs;
 
     public JwtService(
-            @Value("${acusticupc.jwt.secret}") String secret,
+            @Value("${acusticupc.security.jwt-secret}") String secret,
             @Value("${acusticupc.jwt.expiration-ms}") long expirationMs
     ) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

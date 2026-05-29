@@ -28,11 +28,12 @@ spring:
 
 acusticupc:
   jwt:
-    secret: CHANGEME-minimo-32-caracteres-aleatorios
     expiration-ms: 86400000
   bootstrap:
-    admin-email: admin@upc.edu.co
-    admin-password: CHANGEME
+    admin-email: ${ADMIN_EMAIL:admin@upc.edu.co}
+    admin-password: ${ADMIN_PASSWORD:ChangeMeLocally!}
+  security:
+    jwt-secret: ${JWT_SECRET:dev-only-secret-min-32-chars-please-change}
 
 server:
   port: 8080
