@@ -86,4 +86,11 @@ public class GlobalExceptionHandler {
                 ApiError.of(409, "Conflict", ex.getMessage(), req.getRequestURI()));
     }
 
+    @ExceptionHandler(LastAdminException.class)
+    public ResponseEntity<ApiError> lastAdmin(LastAdminException ex, HttpServletRequest req) {
+        log.warn("Intento de tocar al último admin: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.of(409, "Conflict", ex.getMessage(), req.getRequestURI()));
+    }
+
 }
