@@ -1,0 +1,32 @@
+# Perfil de producción (Render). TODO sale de variables de entorno.
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+acusticupc:
+  bootstrap:
+    admin-email: ${ADMIN_EMAIL}
+    admin-password: ${ADMIN_PASSWORD}
+  security:
+    jwt-secret: ${JWT_SECRET}
+    cors-allowed-origins: ${CORS_ORIGINS}
+
+logging:
+  level:
+    root: INFO
+    com.upc.acusticupc: INFO
