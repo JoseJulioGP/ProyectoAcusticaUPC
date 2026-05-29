@@ -71,4 +71,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiError.of(400, "Bad Request", ex.getMessage(), req.getRequestURI()));
     }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> userNotFound(UserNotFoundException ex, HttpServletRequest req) {
+        log.warn("Usuario no encontrado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiError.of(404, "Not Found", ex.getMessage(), req.getRequestURI()));
+    }
+
 }
