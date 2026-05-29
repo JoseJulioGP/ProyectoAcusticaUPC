@@ -6,8 +6,10 @@ import com.upc.acusticupc.analytics.domain.repository.MeasurementStatsRepository
 import com.upc.acusticupc.compliance.domain.model.AlertSeverity;
 import com.upc.acusticupc.compliance.domain.model.ComplianceStatus;
 import com.upc.acusticupc.compliance.domain.repository.ComplianceResultRepository;
+import com.upc.acusticupc.shared.config.CacheConfig;
 import com.upc.acusticupc.sonometry.domain.model.Period;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,10 @@ public class KpiService {
     private final AlertStatsRepository alertStatsRepository;
     private final ComplianceResultRepository complianceResultRepository;
 
+    @Cacheable(
+            value = CacheConfig.KPIS_CACHE,
+            key = "T(java.util.Objects).hash(#from, #to, #zoneId, #period)"
+    )
     @Transactional(readOnly = true)
     public DashboardKpisDTO computeKpis(OffsetDateTime from,
                                         OffsetDateTime to,
