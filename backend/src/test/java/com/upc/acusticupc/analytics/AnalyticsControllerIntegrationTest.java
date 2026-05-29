@@ -130,10 +130,9 @@ class AnalyticsControllerIntegrationTest {
         when(zoneDetailService.detail(any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("Zona no encontrada"));
 
-        // El GlobalExceptionHandler actual mapea IllegalArgumentException a 500.
-        // Deuda tecnica documentada: en Sprint 5 mapear a 404/400 con handler dedicado.
+        // Sprint 5 (Dev 2, D4): GlobalExceptionHandler ahora mapea IllegalArgumentException a 400.
         mockMvc.perform(get("/api/v1/analytics/zones/" + UUID.randomUUID()))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
