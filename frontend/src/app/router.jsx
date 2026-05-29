@@ -7,6 +7,7 @@ import BatchDetailPage from '../features/ingestion/pages/BatchDetailPage';
 import ProtectedRoute from '../features/auth/components/ProtectedRoute';
 import Layout from '../shared/components/Layout';
 import AlertsPage from "../features/compliance/pages/AlertsPage";
+import RoleProtectedRoute from '../features/auth/components/RoleProtectedRoute';
 
 export default function AppRouter() {
   return (
@@ -61,6 +62,16 @@ export default function AppRouter() {
                 <AlertsPage />
               </Layout>
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <RoleProtectedRoute allow={["ADMIN"]}>
+              <Layout>
+                <UserManagementPage />
+              </Layout>
+            </RoleProtectedRoute>
           }
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
