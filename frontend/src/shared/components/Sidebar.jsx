@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MapPin, Upload, ShieldCheck, Volume2 } from 'lucide-react';
+import { LayoutDashboard, MapPin, Upload, ShieldCheck, Volume2, Users } from 'lucide-react';
 import { useRole } from '../../features/auth/hooks/useRole';
 import RoleGate from "../../features/auth/components/RoleGate";
 

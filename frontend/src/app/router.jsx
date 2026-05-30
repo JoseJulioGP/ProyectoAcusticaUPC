@@ -8,6 +8,7 @@ import ProtectedRoute from '../features/auth/components/ProtectedRoute';
 import Layout from '../shared/components/Layout';
 import AlertsPage from "../features/compliance/pages/AlertsPage";
 import RoleProtectedRoute from '../features/auth/components/RoleProtectedRoute';
+import UserManagementPage from '../features/admin/pages/UserManagementPage';
 
 export default function AppRouter() {
   return (
