@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.upc.acusticupc.auth.application.service.UserManagementService.*;
+
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -62,4 +64,33 @@ public class GlobalExceptionHandler {
             ApiError.of(500, "Internal Server Error",
                 "Ocurrió un error inesperado", req.getRequestURI()));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> badArgument(IllegalArgumentException ex, HttpServletRequest req) {
+        log.warn("Argumento inválido: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiError.of(400, "Bad Request", ex.getMessage(), req.getRequestURI()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> userNotFound(UserNotFoundException ex, HttpServletRequest req) {
+        log.warn("Usuario no encontrado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiError.of(404, "Not Found", ex.getMessage(), req.getRequestURI()));
+    }
+
+    @ExceptionHandler(EmailAlreadyUsedException.class)
+    public ResponseEntity<ApiError> emailUsed(EmailAlreadyUsedException ex, HttpServletRequest req) {
+        log.warn("Email duplicado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.of(409, "Conflict", ex.getMessage(), req.getRequestURI()));
+    }
+
+    @ExceptionHandler(LastAdminException.class)
+    public ResponseEntity<ApiError> lastAdmin(LastAdminException ex, HttpServletRequest req) {
+        log.warn("Intento de tocar al último admin: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.of(409, "Conflict", ex.getMessage(), req.getRequestURI()));
+    }
+
 }

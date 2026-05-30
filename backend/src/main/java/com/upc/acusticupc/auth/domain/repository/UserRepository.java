@@ -1,5 +1,6 @@
 package com.upc.acusticupc.auth.domain.repository;
 
+import com.upc.acusticupc.auth.domain.model.Role;
 import com.upc.acusticupc.auth.domain.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    long countByRoleAndActiveTrue(Role role);
 }

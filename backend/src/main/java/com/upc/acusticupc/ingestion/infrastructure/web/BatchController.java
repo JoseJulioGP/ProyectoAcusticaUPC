@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -48,13 +49,14 @@ public class BatchController {
         validateFile(file);
 
         Files.createDirectories(UPLOAD_DIR);
-        String ext = getExtension(file.getOriginalFilename());
+        String filename = normalizeFilename(file.getOriginalFilename());
+        String ext = getExtension(filename);
         Path tempPath = UPLOAD_DIR.resolve(UUID.randomUUID() + "." + ext);
         file.transferTo(tempPath);
-        log.info("Archivo '{}' guardado temporalmente en {}", file.getOriginalFilename(), tempPath);
+        log.info("Archivo '{}' guardado temporalmente en {}", filename, tempPath);
 
         UUID batchId = ingestionService.registerBatch(
-                file.getOriginalFilename(),
+                filename,
                 zoneId,
                 user.getUsername()  // username = email en CustomUserDetailsService
         );
@@ -92,7 +94,7 @@ public class BatchController {
         if (file.isEmpty()) {
             throw new DomainException("Archivo vacío");
         }
-        String fileName = file.getOriginalFilename();
+        String fileName = normalizeFilename(file.getOriginalFilename());
         if (fileName == null || fileName.isBlank()) {
             throw new DomainException("Nombre de archivo inválido");
         }
@@ -105,5 +107,17 @@ public class BatchController {
     private String getExtension(String fileName) {
         int dotIdx = fileName.lastIndexOf('.');
         return dotIdx < 0 ? "" : fileName.substring(dotIdx + 1);
+    }
+
+    private static String normalizeFilename(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "archivo-sin-nombre.xls";
+        }
+        if (raw.indexOf('�') >= 0
+                || raw.getBytes(StandardCharsets.ISO_8859_1).length != raw.length()) {
+            byte[] bytes = raw.getBytes(StandardCharsets.ISO_8859_1);
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+        return raw;
     }
 }

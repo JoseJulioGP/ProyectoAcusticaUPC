@@ -7,23 +7,45 @@ import HeatmapGrid from "../components/HeatmapGrid";
 import { useKpis } from "../hooks/useKpis";
 import { useZonesStats } from "../hooks/useZonesStats";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import RoleGate from "../../auth/components/RoleGate";
+import { downloadCompliancePdf } from "../api/reportsApi";
+
+function ExportPdfButton() {
+  const { from, to, zoneId } = useDashboardFilter();
+  const [busy, setBusy] = useState(false);
+  const onClick = async () => {
+    setBusy(true);
+    try { await downloadCompliancePdf({ from, to, zoneId }); }
+    catch { alert("No se pudo generar el PDF."); }
+    finally { setBusy(false); }
+  };
+  return (
+    <RoleGate allow={["ADMIN", "ANALYST"]}>
+      <button onClick={onClick} disabled={busy}
+              className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:opacity-50">
+        {busy ? "Generando…" : "Exportar PDF"}
+      </button>
+    </RoleGate>
+  );
+}
 
 function DashboardContent() {
   const { period, from, to } = useDashboardFilter();
   const { data: kpis, loading: kpisLoading } = useKpis();
   const { data: zonesStats, loading: zonesLoading } = useZonesStats();
 
-  // El estándar a graficar depende del período seleccionado
-  
   const standardDb = period === "NOCTURNO" ? 55 : 65;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800 mb-4">Dashboard de Acústica UPC</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-slate-800">Dashboard de Acústica UPC</h1>
+        <ExportPdfButton />
+      </div>
 
       <GlobalFilters />
 
-      {/* KPI cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KpiCard
           label="Mediciones"
@@ -58,18 +80,15 @@ function DashboardContent() {
         />
       </div>
 
-      {/* Línea temporal + comparativa */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <LaeqTimeSeriesChart standardDb={standardDb} />
         <ZoneComparisonBars />
       </div>
 
-      {/* Heatmap */}
       <div className="mb-6">
         <HeatmapGrid />
       </div>
 
-      {/* Lista de zonas con stats + drilldown */}
       <div className="bg-white rounded-lg border border-slate-200 p-4 mb-6">
         <h3 className="text-sm font-semibold text-slate-700 mb-3">Zonas — clic para detalle</h3>
         {zonesLoading ? (
