@@ -58,7 +58,7 @@ export default function Sidebar() {
           )}
       </nav>
       <div className="px-5 py-3 text-xs text-slate-500 border-t border-slate-800">
-        v1.0.0
+        AcústicaUPC · v1.0.0 · Universidad Popular del Cesar · 2026
       </div>
     </aside>
   );
