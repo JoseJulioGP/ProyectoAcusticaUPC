@@ -1,3 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@keyframes acu-spin { to { transform: rotate(360deg); } }
+@keyframes acu-radar { 0% { transform: scale(.32); opacity:.65 } 70% { opacity:0 } 100% { transform: scale(1.12); opacity:0 } }
+@keyframes acu-eq { from { transform: scaleY(.28) } to { transform: scaleY(1) } }
+@keyframes acu-fadeup { from { opacity:0; transform: translateY(16px) } to { opacity:1; transform:none } }
+@keyframes acu-draw { to { stroke-dashoffset: 0 } }
+@keyframes acu-bargrow { from { transform: scaleY(0) } to { transform: scaleY(1) } }
+@keyframes acu-blink { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+@keyframes acu-glowpulse { 0%,100% { box-shadow:0 0 0 2px rgba(143,190,61,.18) } 50% { box-shadow:0 0 0 5px rgba(143,190,61,.28),0 0 30px rgba(143,190,61,.45) } }
+
+.acu-stagger > * { animation: acu-fadeup .55s cubic-bezier(.22,.7,.3,1) both; }
+.acu-stagger > *:nth-child(2){animation-delay:.09s} .acu-stagger > *:nth-child(3){animation-delay:.15s}
+.acu-stagger > *:nth-child(4){animation-delay:.21s} .acu-stagger > *:nth-child(5){animation-delay:.27s}
+
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; } }
