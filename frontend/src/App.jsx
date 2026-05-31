@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Login } from '@/ui/Login';
 import { Shell } from '@/ui/Shell';
+import { CompliancePage } from '@/features/compliance/pages/CompliancePage';
 
 export default function App() {
   const { token } = useAuth();
@@ -11,10 +12,14 @@ export default function App() {
 
   return (
     <Shell view={view} setView={setView}>
-      {/* provisional hasta portar las vistas reales */}
-      <div style={{ fontFamily: 'Manrope, sans-serif', color: '#41524a' }}>
-        Vista actual: <b>{view}</b>
-      </div>
+      {view === 'cumplimiento' ? (
+        <CompliancePage />
+      ) : (
+        /* provisional hasta portar el resto de vistas reales */
+        <div style={{ fontFamily: 'Manrope, sans-serif', color: '#41524a' }}>
+          Vista actual: <b>{view}</b>
+        </div>
+      )}
     </Shell>
   );
 }
