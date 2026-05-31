@@ -1,13 +1,9 @@
 import UploadDropZone from "../components/UploadDropZone";
 import BatchListTable from "../components/BatchListTable";
-import { useBatchListPolling } from "../hooks/useBatchListPolling";
+import { useIngesta } from "../hooks/useIngesta";
 
 export default function IngestionPage() {
-  const { data, loading, refresh } = useBatchListPolling();
-
-  const handleUploadSuccess = () => {
-    refresh();
-  };
+  const { rows, loading, isAdmin, retry, markFailed, remove, reload } = useIngesta();
 
   return (
     <div className="space-y-6">
@@ -18,16 +14,22 @@ export default function IngestionPage() {
         </p>
       </div>
 
-      <UploadDropZone onUploadSuccess={handleUploadSuccess} />
+      <UploadDropZone onUploadSuccess={reload} />
 
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-slate-800">
-            Historial {data.totalElements > 0 && <span className="text-slate-500">({data.totalElements})</span>}
+            Historial {rows.length > 0 && <span className="text-slate-500">({rows.length})</span>}
           </h2>
           {loading && <span className="text-xs text-slate-500">Actualizando…</span>}
         </div>
-        <BatchListTable batches={data.content} />
+        <BatchListTable
+          batches={rows}
+          isAdmin={isAdmin}
+          onRetry={retry}
+          onMarkFailed={markFailed}
+          onRemove={remove}
+        />
       </div>
     </div>
   );
