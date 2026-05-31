@@ -51,10 +51,9 @@ public class KpiService {
         }
         long alertsActive = bySeverity.values().stream().mapToLong(Long::longValue).sum();
 
-        // % cumplimiento: CUMPLE / total ComplianceResults en rango
-        long totalResults = complianceResultRepository.countByEvaluatedAtBetween(from, to);
-        long cumple = complianceResultRepository.countByEvaluatedAtBetweenAndStatus(
-                from, to, ComplianceStatus.CUMPLE);
+        // % cumplimiento: CUMPLE / total ComplianceResults en rango (extremo superior exclusivo)
+        long totalResults = complianceResultRepository.countInRange(from, to);
+        long cumple = complianceResultRepository.countInRangeByStatus(from, to, ComplianceStatus.CUMPLE);
 
         double rate = totalResults == 0 ? 0.0 : (100.0 * cumple / totalResults);
 

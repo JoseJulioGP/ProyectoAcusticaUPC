@@ -1,11 +1,13 @@
 package com.upc.acusticupc.ingestion.infrastructure.web;
 
 import com.upc.acusticupc.ingestion.application.dto.BatchSummaryDTO;
+import com.upc.acusticupc.ingestion.application.service.BatchManagementService;
 import com.upc.acusticupc.ingestion.application.service.BatchQueryService;
 import com.upc.acusticupc.ingestion.application.service.SonometerIngestionService;
 import com.upc.acusticupc.ingestion.infrastructure.web.dto.BatchUploadResponse;
 import com.upc.acusticupc.ingestion.infrastructure.web.dto.MeasurementResponseDTO;
 import com.upc.acusticupc.ingestion.infrastructure.web.dto.PageResponse;
+import com.upc.acusticupc.ingestion.application.mapper.BatchMapper;
 import com.upc.acusticupc.shared.exception.DomainException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,6 +40,8 @@ public class BatchController {
 
     private final SonometerIngestionService ingestionService;
     private final BatchQueryService queryService;
+    private final BatchManagementService managementService;
+    private final BatchMapper batchMapper;
 
     @PostMapping(value = "/batches", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
@@ -88,6 +93,30 @@ public class BatchController {
             @PageableDefault(size = 50, sort = "measuredAt") Pageable pageable
     ) {
         return PageResponse.from(queryService.getMeasurements(id, pageable), MeasurementResponseDTO::from);
+    }
+
+    @PostMapping("/batches/{id}/retry")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BatchSummaryDTO> retry(@PathVariable UUID id) {
+        var batch = managementService.retry(id);
+        return ResponseEntity.ok(batchMapper.toSummary(batch));
+    }
+
+    @PostMapping("/batches/{id}/fail")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BatchSummaryDTO> markFailed(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String reason = (body != null) ? body.get("reason") : null;
+        var batch = managementService.markFailed(id, reason);
+        return ResponseEntity.ok(batchMapper.toSummary(batch));
+    }
+
+    @DeleteMapping("/batches/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        managementService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     private void validateFile(MultipartFile file) {
