@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -70,6 +71,22 @@ public class GlobalExceptionHandler {
         log.warn("Argumento inválido: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiError.of(400, "Bad Request", ex.getMessage(), req.getRequestURI()));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiError> illegalState(IllegalStateException ex, HttpServletRequest req) {
+        log.warn("Estado inválido para la operación: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.of(409, "Conflict", ex.getMessage(), req.getRequestURI()));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> missingParam(MissingServletRequestParameterException ex,
+                                                 HttpServletRequest req) {
+        String msg = "Parámetro obligatorio ausente: " + ex.getParameterName();
+        log.warn("{} en {}", msg, req.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiError.of(400, "Bad Request", msg, req.getRequestURI()));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
