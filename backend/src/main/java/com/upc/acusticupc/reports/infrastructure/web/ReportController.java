@@ -20,22 +20,17 @@ public class ReportController {
     private final CompliancePdfReportService pdfService;
 
     @GetMapping(value = "/compliance/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN','ANALYST')")
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
     public ResponseEntity<byte[]> compliancePdf(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) UUID zoneId) {
 
-        LocalDate t = (to != null)   ? to   : LocalDate.now(DateRangeUtil.BOGOTA);
-        LocalDate f = (from != null) ? from : t.minusDays(30);
-
-        DateRangeUtil.DateRange range = DateRangeUtil.resolveRange(f, t);
+        DateRangeUtil.DateRange range = DateRangeUtil.resolveRange(from, to);
         byte[] pdf = pdfService.generate(range.start(), range.end(), zoneId);
 
         String filename = "reporte-cumplimiento-"
-                + t.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf";
+                + to.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf";
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

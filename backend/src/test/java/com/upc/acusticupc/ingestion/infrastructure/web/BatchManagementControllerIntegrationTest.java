@@ -45,8 +45,7 @@ class BatchManagementControllerIntegrationTest {
     @MockitoBean
     private BatchManagementService managementService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private MockMvc mockMvc;
 
