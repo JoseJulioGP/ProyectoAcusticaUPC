@@ -1,21 +1,31 @@
-import { useHeatmap } from "../hooks/useHeatmap";
+import { useHeatmap } from '../hooks/useHeatmap';
+import { Card } from '@/ui/primitives';
 
 function colorFor(excess) {
-  if (excess === -1 || excess == null) return "bg-slate-100 text-slate-400";
-  if (excess <= 0) return "bg-green-200 text-green-900";
-  if (excess <= 3) return "bg-yellow-200 text-yellow-900";
-  if (excess <= 8) return "bg-orange-300 text-orange-900";
-  return "bg-red-400 text-red-50";
+  if (excess === -1 || excess == null) return 'bg-slate-100 text-muted';
+  if (excess <= 0) return 'bg-rombo-verde/20 text-[#3a6018]';
+  if (excess <= 3) return 'bg-warn/20 text-[#7a5500]';
+  if (excess <= 8) return 'bg-rombo-naranja/20 text-[#8a4a00]';
+  return 'bg-danger/20 text-dangerDeep';
 }
+
+const LEGEND = [
+  { cls: 'bg-rombo-verde/20 text-[#3a6018]',   dot: 'bg-rombo-verde',   label: 'Cumple' },
+  { cls: 'bg-warn/20 text-[#7a5500]',           dot: 'bg-warn',          label: '≤3 dB' },
+  { cls: 'bg-rombo-naranja/20 text-[#8a4a00]',  dot: 'bg-rombo-naranja', label: '3–8 dB' },
+  { cls: 'bg-danger/20 text-dangerDeep',         dot: 'bg-danger',        label: '>8 dB' },
+];
 
 export default function HeatmapGrid() {
   const { data, loading, error } = useHeatmap();
 
-  if (loading) return <div className="h-72 bg-slate-100 animate-pulse rounded"></div>;
-  if (error) return <div className="text-red-600">Error al cargar el mapa</div>;
+  if (loading)
+    return <div className="h-72 bg-slate-100 animate-pulse rounded-xl2"></div>;
+  if (error)
+    return <div className="text-danger text-sm">Error al cargar el mapa</div>;
   if (!data || data.zoneNames.length === 0)
     return (
-      <div className="h-72 flex items-center justify-center text-slate-500">
+      <div className="h-72 flex items-center justify-center text-muted text-sm">
         Sin datos para el mapa de calor
       </div>
     );
@@ -23,24 +33,28 @@ export default function HeatmapGrid() {
   const { zoneNames, hours, laeqMatrix, exceedanceMatrix } = data;
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4 overflow-x-auto">
-      <h3 className="text-sm font-semibold text-slate-700 mb-2">
+    <Card className="overflow-x-auto">
+      <h3 className="font-display text-sm font-semibold text-ink mb-2">
         Mapa de calor — LAeq por zona y hora del día
       </h3>
-      <p className="text-xs text-slate-500 mb-3">
-        Colores reflejan el exceso vs estándar.
-        <span className="inline-block ml-2 w-3 h-3 align-middle bg-green-200"></span> Cumple
-        <span className="inline-block ml-2 w-3 h-3 align-middle bg-yellow-200"></span> ≤3 dB
-        <span className="inline-block ml-2 w-3 h-3 align-middle bg-orange-300"></span> 3-8 dB
-        <span className="inline-block ml-2 w-3 h-3 align-middle bg-red-400"></span> &gt;8 dB
-      </p>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {LEGEND.map(({ cls, dot, label }) => (
+          <span key={label}
+            className={`inline-flex items-center gap-1.5 text-xs font-body px-2.5 py-1 rounded-full font-semibold ${cls}`}>
+            <span className={`w-2 h-2 rounded-full inline-block ${dot}`} />
+            {label}
+          </span>
+        ))}
+      </div>
       <table className="text-xs border-collapse">
         <thead>
           <tr>
-            <th className="text-left pr-2 sticky left-0 bg-white">Zona / Hora</th>
+            <th className="text-left pr-2 sticky left-0 bg-white/95 font-body text-muted font-medium">
+              Zona / Hora
+            </th>
             {hours.map((h) => (
-              <th key={h} className="px-1 py-1 text-slate-500 font-normal">
-                {String(h).padStart(2, "0")}
+              <th key={h} className="px-1 py-1 font-body text-muted font-normal">
+                {String(h).padStart(2, '0')}
               </th>
             ))}
           </tr>
@@ -48,23 +62,23 @@ export default function HeatmapGrid() {
         <tbody>
           {zoneNames.map((zname, zi) => (
             <tr key={zname}>
-              <td className="pr-2 py-1 font-medium text-slate-700 sticky left-0 bg-white whitespace-nowrap">
+              <td className="pr-2 py-1 font-body font-semibold text-ink sticky left-0 bg-white/95 whitespace-nowrap">
                 {zname}
               </td>
               {hours.map((h, hi) => {
                 const excess = exceedanceMatrix[zi][hi];
-                const laeq = laeqMatrix[zi][hi];
+                const laeq   = laeqMatrix[zi][hi];
                 return (
                   <td
                     key={h}
-                    className={`w-10 h-8 text-center border border-white ${colorFor(excess)}`}
+                    className={`w-10 h-8 text-center rounded border border-white/50 ${colorFor(excess)}`}
                     title={
                       excess === -1
-                        ? "Sin datos"
-                        : `${zname} · ${h}h\nLAeq: ${laeq} dB\nExceso: ${excess > 0 ? "+" : ""}${excess} dB`
+                        ? 'Sin datos'
+                        : `${zname} · ${h}h\nLAeq: ${laeq} dB\nExceso: ${excess > 0 ? '+' : ''}${excess} dB`
                     }
                   >
-                    {excess === -1 ? "" : laeq.toFixed(0)}
+                    {excess === -1 ? '' : laeq.toFixed(0)}
                   </td>
                 );
               })}
@@ -72,6 +86,6 @@ export default function HeatmapGrid() {
           ))}
         </tbody>
       </table>
-    </div>
+    </Card>
   );
 }

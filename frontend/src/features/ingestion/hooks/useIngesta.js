@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useRole } from '@/features/auth/hooks/useRole';
 
 const POLL_INTERVAL_MS = 3000;
 const ACTIVE_STATUSES = ['PENDING', 'PROCESSING'];
 
 export function useIngesta() {
-  const { role } = useAuth();
+  const { role } = useRole();
   const isAdmin = role === 'ADMIN';
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

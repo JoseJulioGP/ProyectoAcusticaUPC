@@ -8,7 +8,6 @@ import { useKpis } from "../hooks/useKpis";
 import { useZonesStats } from "../hooks/useZonesStats";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import RoleGate from "../../auth/components/RoleGate";
 import { downloadCompliancePdf } from "../api/reportsApi";
 
 function ExportPdfButton() {
@@ -21,12 +20,10 @@ function ExportPdfButton() {
     finally { setBusy(false); }
   };
   return (
-    <RoleGate allow={["ADMIN", "ANALYST"]}>
-      <button onClick={onClick} disabled={busy}
-              className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:opacity-50">
-        {busy ? "Generando…" : "Exportar PDF"}
-      </button>
-    </RoleGate>
+    <button onClick={onClick} disabled={busy}
+            className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:opacity-50">
+      {busy ? "Generando…" : "Exportar PDF"}
+    </button>
   );
 }
 
