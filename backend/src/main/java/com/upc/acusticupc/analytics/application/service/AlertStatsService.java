@@ -23,7 +23,7 @@ public class AlertStatsService {
     @Transactional(readOnly = true)
     public AlertsSummaryDTO summary(OffsetDateTime from, OffsetDateTime to) {
 
-        long total = alertStatsRepository.countByTriggeredAtBetween(from, to);
+        long total = alertStatsRepository.countInRange(from, to);
 
         Map<AlertSeverity, Long> bySev = new EnumMap<>(AlertSeverity.class);
         for (AlertSeverity s : AlertSeverity.values()) bySev.put(s, 0L);

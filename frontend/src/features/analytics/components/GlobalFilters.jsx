@@ -9,7 +9,7 @@ const presets = [
 ];
 
 const periods = [
-  { id: null, label: "Día y noche" },
+  { id: null, label: "Diurno y nocturno" },
   { id: "DIURNO", label: "Diurno" },
   { id: "NOCTURNO", label: "Nocturno" },
 ];

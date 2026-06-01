@@ -68,4 +68,35 @@ class CompliancePdfReportServiceTest {
 
         assertDoesNotThrow(() -> service.generate(from, to, null));
     }
+
+    @Test
+    void generate_ultimoAnio_retornaPdfConDatos() {
+        OffsetDateTime from = OffsetDateTime.now().minusDays(365);
+        OffsetDateTime to   = OffsetDateTime.now();
+
+        // Simula datos reales del assembler (mismo que dashboard)
+        when(assembler.assemble(any(), any(), any())).thenReturn(
+                new ComplianceReportData(
+                        OffsetDateTime.now(),
+                        from, to,
+                        "Todas las zonas",
+                        8344L, 5, 12, 73.5,
+                        List.of(
+                                new ComplianceReportData.ZoneComplianceRow(
+                                        "Oficina CEMPRE", "DIURNO", 62.3, 65.0, "CUMPLE"),
+                                new ComplianceReportData.ZoneComplianceRow(
+                                        "Primer Piso - Pasillo Principal", "NOCTURNO", 68.1, 55.0, "EXCEDE")
+                        ),
+                        List.of()
+                )
+        );
+
+        byte[] pdf = service.generate(from, to, null);
+
+        assertTrue(pdf.length > 100, "PDF debe contener datos");
+        assertEquals('%', (char) pdf[0]);
+        assertEquals('P', (char) pdf[1]);
+        assertEquals('D', (char) pdf[2]);
+        assertEquals('F', (char) pdf[3]);
+    }
 }

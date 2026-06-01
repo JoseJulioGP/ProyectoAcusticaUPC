@@ -9,7 +9,23 @@ const formatDate = (iso) => {
   });
 };
 
-export default function BatchListTable({ batches }) {
+function ActionBtn({ danger, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-xs font-medium ${
+        danger
+          ? "text-rose-600 hover:text-rose-500"
+          : "text-indigo-600 hover:text-indigo-500"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function BatchListTable({ batches, isAdmin, onRetry, onMarkFailed, onRemove }) {
   if (!batches || batches.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
@@ -44,12 +60,34 @@ export default function BatchListTable({ batches }) {
                 )}
               </td>
               <td className="px-4 py-3 text-sm text-slate-600">{formatDate(b.uploadedAt)}</td>
-              <td className="px-4 py-3 text-right">
-                {b.status === "COMPLETED" && (
-                  <Link to={`/ingest/${b.id}`} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                    Ver detalle →
-                  </Link>
-                )}
+              <td className="px-4 py-3">
+                <div className="flex items-center justify-end gap-3">
+                  {b.status === "COMPLETED" && (
+                    <Link
+                      to={`/ingest/${b.id}`}
+                      className="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                    >
+                      Ver detalle →
+                    </Link>
+                  )}
+                  {isAdmin && b.status === "PROCESSING" && (
+                    <>
+                      <ActionBtn onClick={() => onRetry(b.id)}>Reintentar</ActionBtn>
+                      <ActionBtn danger onClick={() => onMarkFailed(b.id)}>Marcar fallido</ActionBtn>
+                    </>
+                  )}
+                  {isAdmin && b.status === "FAILED" && (
+                    <span
+                      className="text-xs italic text-slate-500"
+                      title="Para reintentar una carga fallida, elimínala y vuelve a subir el archivo."
+                    >
+                      Eliminar y resubir
+                    </span>
+                  )}
+                  {isAdmin && (
+                    <ActionBtn danger onClick={() => onRemove(b.id)}>Eliminar</ActionBtn>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

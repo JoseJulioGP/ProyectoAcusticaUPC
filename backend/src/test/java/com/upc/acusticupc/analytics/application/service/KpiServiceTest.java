@@ -56,8 +56,8 @@ class KpiServiceTest {
                 new Object[]{AlertSeverity.LEVE, 1L}
         ));
 
-        when(complianceResultRepository.countByEvaluatedAtBetween(any(), any())).thenReturn(10L);
-        when(complianceResultRepository.countByEvaluatedAtBetweenAndStatus(any(), any(), any()))
+        when(complianceResultRepository.countInRange(any(), any())).thenReturn(10L);
+        when(complianceResultRepository.countInRangeByStatus(any(), any(), any()))
                 .thenReturn(8L);
 
         DashboardKpisDTO result = kpiService.computeKpis(from, to, null, null);
@@ -75,8 +75,8 @@ class KpiServiceTest {
         when(measurementStatsRepository.countInRange(any(), any(), any(), any())).thenReturn(0L);
         when(measurementStatsRepository.countActiveZones(any(), any())).thenReturn(0);
         when(alertStatsRepository.countBySeverityInRange(any(), any())).thenReturn(List.of());
-        when(complianceResultRepository.countByEvaluatedAtBetween(any(), any())).thenReturn(0L);
-        when(complianceResultRepository.countByEvaluatedAtBetweenAndStatus(any(), any(), any()))
+        when(complianceResultRepository.countInRange(any(), any())).thenReturn(0L);
+        when(complianceResultRepository.countInRangeByStatus(any(), any(), any()))
                 .thenReturn(0L);
 
         DashboardKpisDTO result = kpiService.computeKpis(from, to, null, null);
@@ -89,8 +89,8 @@ class KpiServiceTest {
         when(measurementStatsRepository.countInRange(any(), any(), any(), any())).thenReturn(500L);
         when(measurementStatsRepository.countActiveZones(any(), any())).thenReturn(2);
         when(alertStatsRepository.countBySeverityInRange(any(), any())).thenReturn(List.of());
-        when(complianceResultRepository.countByEvaluatedAtBetween(any(), any())).thenReturn(5L);
-        when(complianceResultRepository.countByEvaluatedAtBetweenAndStatus(
+        when(complianceResultRepository.countInRange(any(), any())).thenReturn(5L);
+        when(complianceResultRepository.countInRangeByStatus(
                 any(), any(), eq(ComplianceStatus.CUMPLE))).thenReturn(5L);
 
         DashboardKpisDTO result = kpiService.computeKpis(from, to, null, null);

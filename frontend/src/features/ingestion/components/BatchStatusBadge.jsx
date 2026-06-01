@@ -6,7 +6,7 @@ const STATUS_STYLES = {
 };
 
 const STATUS_LABELS = {
-  PENDING: "Pendiente",
+  PENDING: "En cola",
   PROCESSING: "Procesando…",
   COMPLETED: "Completado",
   FAILED: "Falló",

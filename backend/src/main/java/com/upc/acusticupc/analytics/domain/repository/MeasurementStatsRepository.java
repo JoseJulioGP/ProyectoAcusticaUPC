@@ -14,10 +14,11 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
 
     /**
      * Cuenta mediciones en rango (con filtros opcionales).
+     * Rango: from inclusivo, to exclusivo — usar siempre con resolveRange().
      */
     @Query("""
         SELECT COUNT(m) FROM Measurement m
-        WHERE m.measuredAt BETWEEN :from AND :to
+        WHERE m.measuredAt >= :from AND m.measuredAt < :to
           AND (:zoneId IS NULL OR m.zone.id = :zoneId)
           AND (:period IS NULL OR m.period = :period)
         """)
@@ -28,19 +29,19 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
 
     /**
      * Cuántas zonas distintas tienen al menos una medición en el rango.
+     * Rango exclusivo en el extremo superior.
      */
     @Query("""
         SELECT COUNT(DISTINCT m.zone.id) FROM Measurement m
-        WHERE m.measuredAt BETWEEN :from AND :to
+        WHERE m.measuredAt >= :from AND m.measuredAt < :to
         """)
     int countActiveZones(@Param("from") OffsetDateTime from,
                          @Param("to") OffsetDateTime to);
 
     /**
      * LAeq por zona y período en rango. Devuelve [zoneId, period, laeqDb, sampleCount].
-     *
-     * Fórmula LAeq: 10 * log10( avg(10^(dB/10)) )
-     * En SQL nativo: 10 * log(10, avg(power(10, db_value/10)))
+     * Fórmula LAeq: 10 * log10( avg(10^(dB/10)) ).
+     * Rango exclusivo en el extremo superior.
      */
     @Query(value = """
         SELECT m.zone_id              AS zone_id,
@@ -48,7 +49,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
                10 * log(avg(power(10, m.db_value / 10.0))) AS laeq_db,
                count(*)               AS sample_count
         FROM measurements m
-        WHERE m.measured_at BETWEEN :from AND :to
+        WHERE m.measured_at >= :from AND m.measured_at < :to
           AND (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
         GROUP BY m.zone_id, m.period
         """, nativeQuery = true)
@@ -57,12 +58,13 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
                                        @Param("zoneId") UUID zoneId);
 
     /**
-     * Conteo de mediciones por zona (para ZoneStatsDTO.measurements).
+     * Conteo de mediciones por zona.
+     * Rango exclusivo en el extremo superior.
      */
     @Query(value = """
         SELECT m.zone_id, count(*)
         FROM measurements m
-        WHERE m.measured_at BETWEEN :from AND :to
+        WHERE m.measured_at >= :from AND m.measured_at < :to
         GROUP BY m.zone_id
         """, nativeQuery = true)
     List<Object[]> measurementCountByZone(@Param("from") OffsetDateTime from,
@@ -70,9 +72,9 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
 
     /**
      * Series temporales: LAeq agregado por bucket temporal + zona + periodo.
-     * Bucket se construye con date_trunc(:unit, measured_at).
      * unit debe ser un literal SQL: 'hour' o 'day'. Para evitar inyeccion,
      * el llamante valida que viene de TimeBucketer.dateTruncUnit().
+     * Rango exclusivo en el extremo superior.
      */
     @Query(value = """
     SELECT date_trunc(:unit, m.measured_at)                              AS bucket,
@@ -81,7 +83,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
            count(*)                                                       AS sample_count,
            m.period                                                       AS period
     FROM measurements m
-    WHERE m.measured_at BETWEEN :from AND :to
+    WHERE m.measured_at >= :from AND m.measured_at < :to
       AND (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
       AND (:period IS NULL OR m.period = :period)
     GROUP BY bucket, m.zone_id, m.period
@@ -93,10 +95,10 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
                                   @Param("zoneId") UUID zoneId,
                                   @Param("period") String period);
 
-
     /**
      * Heatmap: LAeq por zona x hora del día (0..23) en el rango.
      * Devuelve [zoneId, hour, laeqDb, sampleCount].
+     * Rango exclusivo en el extremo superior.
      */
     @Query(value = """
     SELECT m.zone_id                                            AS zone_id,
@@ -104,7 +106,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
            10 * log(avg(power(10, m.db_value / 10.0)))          AS laeq_db,
            count(*)                                             AS sample_count
     FROM measurements m
-    WHERE m.measured_at BETWEEN :from AND :to
+    WHERE m.measured_at >= :from AND m.measured_at < :to
       AND (:period IS NULL OR m.period = :period)
     GROUP BY m.zone_id, EXTRACT(HOUR FROM m.measured_at)
     """, nativeQuery = true)

@@ -24,6 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 class ReportControllerIntegrationTest {
 
+    private static final String FROM = "2026-01-01";
+    private static final String TO   = "2026-01-31";
+
     @Autowired
     private WebApplicationContext context;
 
@@ -39,52 +42,64 @@ class ReportControllerIntegrationTest {
                 .build();
     }
 
+    private byte[] pdfBytes() {
+        return new byte[]{'%', 'P', 'D', 'F', '-'};
+    }
+
+    private void assertPdfHeader(byte[] body) {
+        assertEquals('%', (char) body[0]);
+        assertEquals('P', (char) body[1]);
+        assertEquals('D', (char) body[2]);
+        assertEquals('F', (char) body[3]);
+    }
+
     @Test
     void pdf_sinToken_returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/reports/compliance/pdf"))
+        mockMvc.perform(get("/api/v1/reports/compliance/pdf")
+                        .param("from", FROM).param("to", TO))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(roles = "VIEWER")
-    void pdf_conViewer_returns403() throws Exception {
-        mockMvc.perform(get("/api/v1/reports/compliance/pdf"))
-                .andExpect(status().isForbidden());
+    void pdf_conViewer_returns200() throws Exception {
+        when(pdfService.generate(any(), any(), any())).thenReturn(pdfBytes());
+
+        mockMvc.perform(get("/api/v1/reports/compliance/pdf")
+                        .param("from", FROM).param("to", TO))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, containsString("application/pdf")))
+                .andExpect(result -> assertPdfHeader(result.getResponse().getContentAsByteArray()));
     }
 
     @Test
     @WithMockUser(roles = "ANALYST")
     void pdf_conAnalyst_returns200_yContentTypePdf() throws Exception {
-        when(pdfService.generate(any(), any(), any()))
-                .thenReturn(new byte[]{'%', 'P', 'D', 'F', '-'});
+        when(pdfService.generate(any(), any(), any())).thenReturn(pdfBytes());
 
-        mockMvc.perform(get("/api/v1/reports/compliance/pdf"))
+        mockMvc.perform(get("/api/v1/reports/compliance/pdf")
+                        .param("from", FROM).param("to", TO))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, containsString("application/pdf")))
-                .andExpect(result -> {
-                    byte[] body = result.getResponse().getContentAsByteArray();
-                    assertEquals('%', (char) body[0]);
-                    assertEquals('P', (char) body[1]);
-                    assertEquals('D', (char) body[2]);
-                    assertEquals('F', (char) body[3]);
-                });
+                .andExpect(result -> assertPdfHeader(result.getResponse().getContentAsByteArray()));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void pdf_conAdmin_returns200_yContentTypePdf() throws Exception {
-        when(pdfService.generate(any(), any(), any()))
-                .thenReturn(new byte[]{'%', 'P', 'D', 'F', '-'});
+        when(pdfService.generate(any(), any(), any())).thenReturn(pdfBytes());
 
-        mockMvc.perform(get("/api/v1/reports/compliance/pdf"))
+        mockMvc.perform(get("/api/v1/reports/compliance/pdf")
+                        .param("from", FROM).param("to", TO))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, containsString("application/pdf")))
-                .andExpect(result -> {
-                    byte[] body = result.getResponse().getContentAsByteArray();
-                    assertEquals('%', (char) body[0]);
-                    assertEquals('P', (char) body[1]);
-                    assertEquals('D', (char) body[2]);
-                    assertEquals('F', (char) body[3]);
-                });
+                .andExpect(result -> assertPdfHeader(result.getResponse().getContentAsByteArray()));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void pdf_sinFromYTo_returns400() throws Exception {
+        mockMvc.perform(get("/api/v1/reports/compliance/pdf"))
+                .andExpect(status().isBadRequest());
     }
 }
