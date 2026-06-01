@@ -1,63 +1,74 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MapPin, Upload, ShieldCheck, Volume2, Users } from 'lucide-react';
+import { LayoutDashboard, MapPin, Upload, ShieldCheck, Users } from 'lucide-react';
 import { useRole } from '../../features/auth/hooks/useRole';
-import RoleGate from "../../features/auth/components/RoleGate";
+import { Rombo } from '@/ui/Rombo';
 
 const NAV = [
-  // Dashboard: visible para todos
-  { to: '/dashboard',  label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
-  // Zonas: deshabilitado, próximos sprints
-  { to: '/zones',      label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'], disabled: true },
-  // Ingesta: solo ADMIN
-  { to: '/ingest',     label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
-  // Cumplimiento: ADMIN + ANALYST
-  { to: '/compliance', label: 'Cumplimiento', icon: ShieldCheck,     allow: ['ADMIN', 'ANALYST'] },
-  // Gestión de usuarios: solo ADMIN
-  { to: '/admin/users', label: 'Usuarios', icon: Users, allow: ['ADMIN'] },
-
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
+  { to: '/zones',       label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'], disabled: true },
+  { to: '/ingest',      label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
+  { to: '/compliance',  label: 'Cumplimiento', icon: ShieldCheck,     allow: ['ADMIN', 'ANALYST'] },
+  { to: '/admin/users', label: 'Usuarios',     icon: Users,           allow: ['ADMIN'] },
 ];
 
 export default function Sidebar() {
   const { role } = useRole();
 
   return (
-    <aside className="w-60 bg-slate-900 text-slate-100 flex flex-col">
-      <div className="flex items-center gap-2 px-5 py-5 border-b border-slate-800">
-        <Volume2 size={22} className="text-indigo-400" />
-        <span className="font-bold text-lg">AcústicaUPC</span>
+    <aside
+      className="w-60 flex flex-col"
+      style={{
+        background:
+          'radial-gradient(120% 80% at 20% 0%, #0f5840 0%, #0c4836 45%, #0a3327 100%)',
+      }}
+    >
+      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-white/10">
+        <Rombo size={26} gap="#0c4836" />
+        <span className="font-display font-bold text-lg text-white">AcústicaUPC</span>
       </div>
+
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {NAV
-          // Solo muestra los enlaces permitidos para el rol del usuario logueado
-          .filter(({ allow }) => role && allow.includes(role))
-          .map(({ to, label, icon: Icon, disabled }) =>
+        {NAV.filter(({ allow }) => role && allow.includes(role)).map(
+          ({ to, label, icon: Icon, disabled }) =>
             disabled ? (
               <div
                 key={to}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 cursor-not-allowed"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/40 cursor-not-allowed"
                 title="Disponible en próximos sprints"
               >
                 <Icon size={18} />
-                <span className="text-sm">{label}</span>
-                <span className="ml-auto text-[10px] bg-slate-800 px-1.5 py-0.5 rounded">próx.</span>
+                <span className="text-sm font-body">{label}</span>
+                <span className="ml-auto text-[10px] font-bold tracking-wide bg-white/10 px-1.5 py-0.5 rounded-full text-white/55">
+                  próx.
+                </span>
               </div>
             ) : (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body transition-colors ${
+                    isActive
+                      ? 'bg-white/10 text-white font-semibold'
+                      : 'text-white/75 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
-                <Icon size={18} />
-                <span>{label}</span>
+                {({ isActive }) => (
+                  <>
+                    <Icon
+                      size={18}
+                      className={isActive ? 'text-rombo-verde' : ''}
+                    />
+                    <span>{label}</span>
+                  </>
+                )}
               </NavLink>
             )
-          )}
+        )}
       </nav>
-      <div className="px-5 py-3 text-xs text-slate-500 border-t border-slate-800">
+
+      <div className="px-5 py-3 text-xs font-body text-white/40 border-t border-white/10">
         AcústicaUPC · v1.0.0 · Universidad Popular del Cesar · 2026
       </div>
     </aside>
