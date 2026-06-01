@@ -77,7 +77,12 @@ export default function BatchListTable({ batches, isAdmin, onRetry, onMarkFailed
                     </>
                   )}
                   {isAdmin && b.status === "FAILED" && (
-                    <ActionBtn onClick={() => onRetry(b.id)}>Reintentar</ActionBtn>
+                    <span
+                      className="text-xs italic text-slate-500"
+                      title="Para reintentar una carga fallida, elimínala y vuelve a subir el archivo."
+                    >
+                      Eliminar y resubir
+                    </span>
                   )}
                   {isAdmin && (
                     <ActionBtn danger onClick={() => onRemove(b.id)}>Eliminar</ActionBtn>
