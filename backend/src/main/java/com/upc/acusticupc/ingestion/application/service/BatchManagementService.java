@@ -42,6 +42,7 @@ public class BatchManagementService {
         b.setErrorMessage(null);
         b.setProcessedAt(null);
         log.info("Batch {} re-encolado a PENDING por acción admin", id);
+        if (b.getZone() != null) b.getZone().getName();   // ← inicializa la zona antes de salir
         return batchRepository.save(b);
     }
 

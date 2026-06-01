@@ -1,5 +1,5 @@
-const BASE = import.meta.env.VITE_API_URL ?? '/api/v1';
-const token = () => localStorage.getItem('acu-token');
+const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
+const token = () => localStorage.getItem('acusticupc.token');
 
 async function req(method, path, { params, body } = {}) {
   const qs = params ? '?' + new URLSearchParams(params) : '';

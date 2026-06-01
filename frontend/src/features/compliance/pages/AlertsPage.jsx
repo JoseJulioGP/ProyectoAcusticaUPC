@@ -3,13 +3,22 @@ import { complianceApi } from "../api/complianceApi";
 import AlertsTable from "../components/AlertsTable";
 import ComplianceFilters from "../components/ComplianceFilters";
 
+function defaultFilters() {
+  const to = new Date();
+  const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+  return {
+    zoneId: "",
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+  };
+}
+
 export default function AlertsPage() {
-  const [filters, setFilters] = useState(null);
+  const [filters, setFilters] = useState(defaultFilters);
   const [data, setData] = useState({ content: [], totalElements: 0 });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!filters) return;
     setLoading(true);
     complianceApi
       .listAlerts({
