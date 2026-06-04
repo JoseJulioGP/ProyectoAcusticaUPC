@@ -2,6 +2,7 @@ package com.upc.acusticupc.auth.application.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -12,6 +13,9 @@ import jakarta.validation.constraints.Size;
  * es {@code VIEWER} (hardcoded en {@code AuthServiceImpl.register}). Cualquier
  * {@code "role": "ADMIN"} que llegue en el body es ignorado silenciosamente por
  * Jackson como propiedad desconocida.</p>
+ *
+ * <p>Política de contraseña (Sprint 7, Bloque B): mínimo 10 caracteres, al menos
+ * una mayúscula, una minúscula y un dígito.</p>
  */
 public record RegisterRequest(
         @NotBlank(message = "Nombre es obligatorio")
@@ -22,6 +26,9 @@ public record RegisterRequest(
         String email,
 
         @NotBlank
-        @Size(min = 8, message = "Password mínimo 8 caracteres")
+        @Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{10,100}$",
+                message = "Mínimo 10 caracteres, una mayúscula, una minúscula y un dígito"
+        )
         String password
 ) {}
