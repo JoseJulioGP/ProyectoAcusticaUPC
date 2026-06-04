@@ -23,3 +23,8 @@ Thumbs.db
 
 # Local config con credenciales reales — cada dev tiene la suya
 backend/src/main/resources/application.yml
+
+# Documentos de planificación de sprint (locales)
+sprint-7-*.md
+*.planning.md
+backend/docs/sprint7-commits-mario.md
