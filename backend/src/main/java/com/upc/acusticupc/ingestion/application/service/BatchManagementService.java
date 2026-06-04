@@ -47,6 +47,15 @@ public class BatchManagementService {
     }
 
     @Transactional
+    public void updateObservation(UUID batchId, String observation) {
+        MeasurementBatch b = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch", batchId));
+        b.setObservation(observation);
+        batchRepository.save(b);
+        log.info("Observación actualizada para batch {}", batchId);
+    }
+
+    @Transactional
     public MeasurementBatch markFailed(UUID id, String reason) {
         MeasurementBatch b = batchRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch", id));

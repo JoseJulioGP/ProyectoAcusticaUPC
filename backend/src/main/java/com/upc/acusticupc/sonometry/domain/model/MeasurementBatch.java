@@ -54,6 +54,9 @@ public class MeasurementBatch {
     @Column(length = 1000)
     private String errorMessage;
 
+    @Column(name = "observation", columnDefinition = "TEXT")
+    private String observation;
+
     @CreationTimestamp
     @Column(name = "uploaded_at", updatable = false)
     private OffsetDateTime uploadedAt;
