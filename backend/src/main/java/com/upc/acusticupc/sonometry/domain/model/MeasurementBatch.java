@@ -1,6 +1,7 @@
 package com.upc.acusticupc.sonometry.domain.model;
 
 import com.upc.acusticupc.auth.domain.model.User;
+import com.upc.acusticupc.ingestion.domain.model.IngestionFolder;
 import com.upc.acusticupc.zones.domain.model.Zone;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -56,6 +57,10 @@ public class MeasurementBatch {
 
     @Column(name = "observation", columnDefinition = "TEXT")
     private String observation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "folder_id")
+    private IngestionFolder folder;
 
     @CreationTimestamp
     @Column(name = "uploaded_at", updatable = false)
