@@ -48,6 +48,19 @@ public class Zone {
     @Column(nullable = false)
     private boolean active;
 
+    // Posición sobre el plano (% relativo al contenedor). Nullable: zona sin posicionar.
+    @Column(name = "map_x")
+    private Double mapX;
+
+    @Column(name = "map_y")
+    private Double mapY;
+
+    @Column(name = "map_width")
+    private Double mapWidth;
+
+    @Column(name = "map_height")
+    private Double mapHeight;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;

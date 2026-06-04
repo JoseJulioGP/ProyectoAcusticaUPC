@@ -113,4 +113,42 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
     List<Object[]> laeqByZoneAndHour(@Param("from") OffsetDateTime from,
                                      @Param("to") OffsetDateTime to,
                                      @Param("period") String period);
+
+    /**
+     * Promedio de dB por día de la semana (EXTRACT(DOW): 0=domingo .. 6=sábado)
+     * para un año y rango de semanas ISO. zoneId opcional.
+     * Devuelve [dow, avgDb, sampleCount].
+     */
+    @Query(value = """
+        SELECT EXTRACT(DOW FROM m.measured_at)::int                 AS dow,
+               avg(m.db_value)                                       AS avg_db,
+               count(*)                                              AS sample_count
+        FROM measurements m
+        WHERE (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
+          AND EXTRACT(YEAR FROM m.measured_at) = :year
+          AND EXTRACT(WEEK FROM m.measured_at) BETWEEN :isoWeekFrom AND :isoWeekTo
+        GROUP BY EXTRACT(DOW FROM m.measured_at)
+        ORDER BY dow
+        """, nativeQuery = true)
+    List<Object[]> avgByWeekday(@Param("zoneId") UUID zoneId,
+                                @Param("year") int year,
+                                @Param("isoWeekFrom") int isoWeekFrom,
+                                @Param("isoWeekTo") int isoWeekTo);
+
+    /**
+     * Serie diaria de avgDb partida en dos por una fecha pivote.
+     * Devuelve [day, avgDb, sampleCount, isBefore]. zoneId opcional.
+     */
+    @Query(value = """
+        SELECT date_trunc('day', m.measured_at)                      AS day,
+               avg(m.db_value)                                        AS avg_db,
+               count(*)                                               AS sample_count,
+               (m.measured_at < :pivot)                               AS is_before
+        FROM measurements m
+        WHERE (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
+        GROUP BY date_trunc('day', m.measured_at), (m.measured_at < :pivot)
+        ORDER BY day
+        """, nativeQuery = true)
+    List<Object[]> dailyAvgBeforeAfter(@Param("zoneId") UUID zoneId,
+                                       @Param("pivot") OffsetDateTime pivot);
 }

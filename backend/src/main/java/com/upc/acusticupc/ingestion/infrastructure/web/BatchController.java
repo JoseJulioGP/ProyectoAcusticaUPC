@@ -4,11 +4,14 @@ import com.upc.acusticupc.ingestion.application.dto.BatchSummaryDTO;
 import com.upc.acusticupc.ingestion.application.service.BatchManagementService;
 import com.upc.acusticupc.ingestion.application.service.BatchQueryService;
 import com.upc.acusticupc.ingestion.application.service.SonometerIngestionService;
+import com.upc.acusticupc.ingestion.infrastructure.web.dto.BatchFolderRequest;
+import com.upc.acusticupc.ingestion.infrastructure.web.dto.BatchObservationRequest;
 import com.upc.acusticupc.ingestion.infrastructure.web.dto.BatchUploadResponse;
 import com.upc.acusticupc.ingestion.infrastructure.web.dto.MeasurementResponseDTO;
 import com.upc.acusticupc.ingestion.infrastructure.web.dto.PageResponse;
 import com.upc.acusticupc.ingestion.application.mapper.BatchMapper;
 import com.upc.acusticupc.shared.exception.DomainException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -116,6 +119,24 @@ public class BatchController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         managementService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/batches/{id}/observation")
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST')")
+    public ResponseEntity<Void> updateObservation(
+            @PathVariable UUID id,
+            @Valid @RequestBody BatchObservationRequest request) {
+        managementService.updateObservation(id, request.observation());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/batches/{id}/folder")
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST')")
+    public ResponseEntity<Void> moveToFolder(
+            @PathVariable UUID id,
+            @Valid @RequestBody BatchFolderRequest request) {
+        managementService.moveToFolder(id, request.folderId());
         return ResponseEntity.noContent().build();
     }
 
