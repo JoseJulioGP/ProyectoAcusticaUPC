@@ -25,7 +25,15 @@ function ActionBtn({ danger, onClick, children }) {
   );
 }
 
-export default function BatchListTable({ batches, isAdmin, onRetry, onMarkFailed, onRemove }) {
+export default function BatchListTable({
+  batches,
+  isAdmin,
+  hideZone = false,
+  bare = false,
+  onRetry,
+  onMarkFailed,
+  onRemove,
+}) {
   if (!batches || batches.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
@@ -35,12 +43,14 @@ export default function BatchListTable({ batches, isAdmin, onRetry, onMarkFailed
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className={bare ? "overflow-x-auto" : "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"}>
       <table className="min-w-full divide-y divide-slate-200">
         <thead className="bg-slate-50">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Archivo</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Zona</th>
+            {!hideZone && (
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Zona</th>
+            )}
             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Estado</th>
             <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Mediciones</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Subido</th>
@@ -49,9 +59,11 @@ export default function BatchListTable({ batches, isAdmin, onRetry, onMarkFailed
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
           {batches.map((b) => (
-            <tr key={b.id} className="hover:bg-slate-50">
+            <tr key={b.id} className="acu-trow">
               <td className="px-4 py-3 text-sm font-medium text-slate-900">{b.fileName}</td>
-              <td className="px-4 py-3 text-sm text-slate-600">{b.zoneName ?? "—"}</td>
+              {!hideZone && (
+                <td className="px-4 py-3 text-sm text-slate-600">{b.zoneName ?? "—"}</td>
+              )}
               <td className="px-4 py-3"><BatchStatusBadge status={b.status} /></td>
               <td className="px-4 py-3 text-right text-sm tabular-nums text-slate-700">
                 {b.validRows?.toLocaleString("es-CO") ?? "—"}

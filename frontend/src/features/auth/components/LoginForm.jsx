@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Rombo } from '@/ui/Rombo';
-import { Rings } from '@/ui/Rings';
+import { Rings, Radar } from '@/ui/Rings';
 import { useIsMobile } from '@/ui/useIsMobile';
 
 const C = {
@@ -110,6 +110,7 @@ export default function LoginForm() {
   const [show,        setShow]        = useState(false);
   const [error,       setError]       = useState('');
   const [submitting,  setSubmitting]  = useState(false);
+  const [remember,    setRemember]    = useState(true);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -118,7 +119,7 @@ export default function LoginForm() {
     setError('');
     setSubmitting(true);
     try {
-      await login(userInput.trim(), password);
+      await login(userInput.trim(), password, remember);
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Usuario o contraseña incorrectos');
@@ -139,6 +140,10 @@ export default function LoginForm() {
     }}>
       <div style={{ position: 'absolute', right: isMobile ? '-30%' : '-14%', top: isMobile ? '-60%' : '8%', pointerEvents: 'none', opacity: 0.5 }}>
         <Rings color={C.verde} count={isMobile ? 4 : 6} base={isMobile ? 50 : 70} gap={isMobile ? 40 : 60} opacity={0.5} />
+      </div>
+      {/* Pulso radar animado (movimiento) */}
+      <div style={{ position: 'absolute', right: isMobile ? '-6%' : '4%', top: isMobile ? '-34%' : '20%', pointerEvents: 'none', opacity: 0.5 }}>
+        <Radar color={C.verde} size={isMobile ? 200 : 320} count={4} />
       </div>
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 13 }}>
         <Rombo size={isMobile ? 34 : 44} gap="#0f5840" />
@@ -215,15 +220,26 @@ export default function LoginForm() {
               {error}
             </div>
           )}
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: FB, fontSize: 13.5, color: '#41524a', fontWeight: 500 }}>
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
+              style={{ width: 16, height: 16, accentColor: C.petroleo }} />
+            Recordar sesión
+          </label>
+
           <button
             type="submit"
             disabled={submitting}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.99)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             style={{
               marginTop: 6, border: 'none', cursor: submitting ? 'default' : 'pointer',
               borderRadius: 12, padding: 15,
               background: submitting ? '#2f6b53' : C.petroleo,
               color: '#fff', fontFamily: FD, fontWeight: 600, fontSize: 16,
               boxShadow: '0 8px 20px rgba(19,105,74,0.28)',
+              transition: 'background .15s, transform .1s',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             }}
           >
@@ -237,8 +253,14 @@ export default function LoginForm() {
             )}
           </button>
         </form>
-        <div style={{ marginTop: 36, paddingTop: 20, borderTop: '1px solid rgba(19,105,74,0.12)', fontFamily: FB, fontSize: 12, color: '#8a978f', lineHeight: 1.6 }}>
-          Universidad Popular del Cesar<br />Facultad de Ingeniería · Ambiental y Sanitaria
+        <p style={{ fontFamily: FB, fontSize: 13.5, textAlign: 'center', color: '#5a6962', marginTop: 22 }}>
+          ¿No tienes cuenta?{' '}
+          <Link to="/register" style={{ color: C.petroleo, fontWeight: 700, textDecoration: 'underline' }}>
+            Regístrate
+          </Link>
+        </p>
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(19,105,74,0.12)', fontFamily: FB, fontSize: 12, color: '#8a978f', lineHeight: 1.6 }}>
+          Universidad Popular del Cesar<br />Facultad de Ingeniería y Tecnologia · Ingenieria de Sistemas
         </div>
       </div>
     </div>

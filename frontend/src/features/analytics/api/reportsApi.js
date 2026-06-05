@@ -30,3 +30,30 @@ export async function downloadCompliancePdf({ from, to, zoneId }) {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+const XLSX_MIME =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+/** Exporta el dashboard a Excel (RF-09). Dispara la descarga en el navegador. */
+export async function downloadDashboardXlsx({ from, to, zoneId } = {}) {
+  const params = new URLSearchParams();
+  if (from) params.set("from", toIsoDate(from));
+  if (to) params.set("to", toIsoDate(to));
+  if (zoneId) params.set("zoneId", zoneId);
+
+  const res = await apiClient.get(`/reports/dashboard.xlsx?${params.toString()}`, {
+    responseType: "blob",
+  });
+
+  const cd = res.headers["content-disposition"] ?? "";
+  const match = cd.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : "dashboard.xlsx";
+  const url = window.URL.createObjectURL(new Blob([res.data], { type: XLSX_MIME }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}

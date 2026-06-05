@@ -51,4 +51,18 @@ export const analyticsApi = {
       })
       .then((r) => r.data);
   },
+
+  // Comparativo por día de la semana (RF-05).
+  weekday(params = {}) {
+    return apiClient
+      .get("/analytics/weekday", { params })
+      .then((r) => r.data);
+  },
+
+  // Antes/después de una fecha pivote (RF-10).
+  beforeAfter(params = {}) {
+    return apiClient
+      .get("/analytics/before-after", { params })
+      .then((r) => r.data);
+  },
 };

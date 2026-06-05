@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, PageHead, Field, Select, TextInput, Badge } from '@/ui/primitives';
 import { useCumplimiento } from '../hooks/useCumplimiento';
+import Modal from '../../../shared/ui/Modal';
+import MitigationActions from '../components/MitigationActions';
+import BatchObservationNote from '../../ingestion/components/BatchObservationNote';
 
 const PERIODO_LABEL = { DIURNO: 'Diurno', NOCTURNO: 'Nocturno' };
 
 export function CompliancePage() {
-  const { filters, setFilters, zones, rows, alerts, loading, error } = useCumplimiento();
+  const { filters, setFilters, zones, rows, loading, error } = useCumplimiento();
   const setF = (patch) => setFilters((f) => ({ ...f, ...patch }));
+  const [actionsFor, setActionsFor] = useState(null); // fila que excede, para ver acciones
 
   return (
     <div className="acu-stagger">
@@ -52,65 +56,82 @@ export function CompliancePage() {
         </Card>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card>
-          <SectionTitle title="Resultados por zona / periodo" loading={loading} />
-          {filters.zoneId === 'todas' ? (
-            <Empty>Selecciona una zona específica para ver sus resultados por periodo.</Empty>
-          ) : rows.length === 0 && !loading ? (
-            <Empty>Sin resultados en el rango.</Empty>
-          ) : (
-            <table className="w-full text-[13px] font-body">
-              <thead>
-                <tr className="text-left text-muted border-b border-petroleo/10">
-                  <Th>Periodo</Th><Th>LAeq</Th><Th>L90</Th><Th>Estándar</Th><Th>Estado</Th>
+      <Card>
+        <SectionTitle title="Resultados por zona / periodo" loading={loading} />
+        {rows.length === 0 && !loading ? (
+          <Empty>Sin resultados en el rango.</Empty>
+        ) : (
+          <table className="w-full text-[13px] font-body">
+            <thead>
+              <tr className="text-left text-muted border-b border-petroleo/10">
+                {filters.zoneId === 'todas' && <Th>Zona</Th>}
+                <Th>Periodo</Th><Th>LAeq</Th><Th>L90</Th><Th>Estándar</Th><Th>Estado</Th><Th>Acciones</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-b border-petroleo/5">
+                  {filters.zoneId === 'todas' && <Td>{r.zoneName}</Td>}
+                  <Td>{PERIODO_LABEL[r.period] ?? r.period}</Td>
+                  <Td>{fmtDb(r.laeqDb)}</Td>
+                  <Td>{fmtDb(r.l90Db)}</Td>
+                  <Td>{fmtDb(r.standardDb)}</Td>
+                  <Td>
+                    <Badge kind={r.status}>{r.status === 'CUMPLE' ? 'Cumple' : 'Excede'}</Badge>
+                  </Td>
+                  <Td>
+                    {r.status !== 'CUMPLE' ? (
+                      <button
+                        type="button"
+                        onClick={() => setActionsFor(r)}
+                        className="font-semibold text-petroleo hover:underline"
+                      >
+                        Ver acciones
+                      </button>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </Td>
                 </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-petroleo/5">
-                    <Td>{PERIODO_LABEL[r.period] ?? r.period}</Td>
-                    <Td>{fmtDb(r.laeqDb)}</Td>
-                    <Td>{fmtDb(r.l90Db)}</Td>
-                    <Td>{fmtDb(r.standardDb)}</Td>
-                    <Td>
-                      <Badge kind={r.status}>{r.status === 'CUMPLE' ? 'Cumple' : 'Excede'}</Badge>
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Card>
 
-        <Card>
-          <SectionTitle title="Alertas en el rango" loading={loading} />
-          {alerts.length === 0 && !loading ? (
-            <Empty>Sin alertas en el rango seleccionado.</Empty>
-          ) : (
-            <table className="w-full text-[13px] font-body">
-              <thead>
-                <tr className="text-left text-muted border-b border-petroleo/10">
-                  <Th>Zona</Th><Th>Periodo</Th><Th>Medido</Th><Th>Exceso</Th><Th>Severidad</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {alerts.map((a) => (
-                  <tr key={a.id} className="border-b border-petroleo/5">
-                    <Td>{a.zoneName}</Td>
-                    <Td>{PERIODO_LABEL[a.period] ?? a.period}</Td>
-                    <Td>{fmtDb(a.measuredDb)}</Td>
-                    <Td>+{fmtDb(a.excessDb)}</Td>
-                    <Td>
-                      <Badge kind={a.severity} alert={a.severity === 'CRITICA'}>{a.severity}</Badge>
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
-      </div>
+      {/* Acciones correctivas / mitigación para una zona que excede */}
+      <Modal
+        open={!!actionsFor}
+        onClose={() => setActionsFor(null)}
+        title="Acciones correctivas recomendadas"
+        width={560}
+        footer={
+          <button
+            type="button"
+            onClick={() => setActionsFor(null)}
+            className="rounded-[11px] border-[1.5px] border-petroleo/15 px-4 py-2 text-sm font-semibold text-petroleo hover:bg-petroleo/[0.06]"
+          >
+            Cerrar
+          </button>
+        }
+      >
+        {actionsFor && (
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">
+              <strong>{actionsFor.zoneName}</strong> · {PERIODO_LABEL[actionsFor.period] ?? actionsFor.period}
+              {" · "}Exceso <span className="font-semibold text-rose-700">+{fmtDb(actionsFor.excessDb)}</span>
+            </p>
+            <div>
+              <h3 className="font-semibold text-slate-800 mb-1.5">Observación de la carga</h3>
+              <BatchObservationNote batchId={actionsFor.batchId} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800 mb-1.5">Acciones recomendadas</h3>
+              <MitigationActions excessDb={actionsFor.excessDb} />
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -22,11 +22,18 @@ export const complianceApi = {
       .then((r) => r.data);
   },
 
+  // Endpoint paginado nuevo (RF-12) → AlertController. Actualmente da 500 en backend,
+  // por eso AlertsPage usa listAlerts (/compliance/alerts) como workaround.
+  listAlertsPaginated(params = {}) {
+    return apiClient.get("/alerts", { params }).then((r) => r.data);
+  },
+
+  // Workaround estable de alertas. Devuelve Page<AlertDTO> de Spring
+  // (el índice de página es `number`; el campo de fecha es `triggeredAt`).
+  // No acepta `severity` (se filtra en cliente).
   listAlerts({ zoneId, from, to, page = 0, size = 20 } = {}) {
     const params = { from, to, page, size, sort: "triggeredAt,desc" };
     if (zoneId) params.zoneId = zoneId;
-    return apiClient
-      .get("/compliance/alerts", { params })
-      .then((r) => r.data);
+    return apiClient.get("/compliance/alerts", { params }).then((r) => r.data);
   },
 };
