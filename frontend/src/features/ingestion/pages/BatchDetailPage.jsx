@@ -7,7 +7,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useComplianceResult } from "../../compliance/hooks/useComplianceResult";
 import { complianceApi } from "../../compliance/api/complianceApi";
 import ComplianceResultCard from "../../compliance/components/ComplianceResultCard";
-import { useAuth } from "../../auth/hooks/useAuth";
+import { useRole } from "../../auth/hooks/useRole";
+import BatchObservationCard from "../components/BatchObservationCard";
 
 export default function BatchDetailPage() {
   const { batchId } = useParams();
@@ -21,8 +22,8 @@ export default function BatchDetailPage() {
     loading: cLoading,
     refresh: refreshCompliance,
   } = useComplianceResult(batchId);
-  const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const { isAdmin, isAnalyst } = useRole();
+  const canManage = isAdmin || isAnalyst;
 
   useEffect(() => {
     ingestionApi.get(batchId).then(setBatch);
@@ -55,7 +56,7 @@ export default function BatchDetailPage() {
   if (!batch) return <div className="text-slate-500">Cargando batch…</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="acu-stagger space-y-6">
       <Link to="/ingest" className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500">
         <ChevronLeft className="h-4 w-4 mr-1" /> Volver a ingesta
       </Link>
@@ -122,6 +123,13 @@ export default function BatchDetailPage() {
           </div>
         </section>
       </div>
+
+      <BatchObservationCard
+        batchId={batchId}
+        value={batch.observation ?? ""}
+        updatedAt={batch.observationUpdatedAt}
+        canEdit={canManage}
+      />
 
       <div>
         <h2 className="text-lg font-semibold text-slate-800 mb-3">

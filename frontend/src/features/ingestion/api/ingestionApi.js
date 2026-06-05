@@ -27,4 +27,10 @@ export const ingestionApi = {
       })
       .then((r) => r.data);
   },
+
+  updateObservation(batchId, observation) {
+    return apiClient
+      .patch(`/ingest/batches/${batchId}/observation`, { observation })
+      .then((r) => r.data);
+  },
 };

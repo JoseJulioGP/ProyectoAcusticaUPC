@@ -1,5 +1,7 @@
 const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
-const token = () => localStorage.getItem('acusticupc.token');
+// Lee de ambos stores: localStorage (recordar) o sessionStorage (sesión).
+const token = () =>
+  localStorage.getItem('acusticupc.token') ?? sessionStorage.getItem('acusticupc.token');
 
 async function req(method, path, { params, body } = {}) {
   const qs = params ? '?' + new URLSearchParams(params) : '';

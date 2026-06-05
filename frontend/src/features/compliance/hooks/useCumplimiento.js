@@ -52,10 +52,17 @@ export function useCumplimiento() {
         const alertsPromise = api.get('/compliance/alerts', { params: alertsParams })
           .then((r) => r?.content ?? []);
 
+        // /compliance/results exige zoneId → para "todas" pedimos por cada zona y combinamos.
         const rowsPromise = (filters.zoneId !== 'todas')
-          ? api.get('/compliance/results', { params: { ...alertsParams, zoneId: filters.zoneId } })
+          ? api.get('/compliance/results', { params: { from, to, zoneId: filters.zoneId, size: 100 } })
               .then((r) => r?.content ?? [])
-          : Promise.resolve([]);
+          : Promise.all(
+              zones.map((z) =>
+                api.get('/compliance/results', { params: { from, to, zoneId: z.id, size: 100 } })
+                  .then((r) => r?.content ?? [])
+                  .catch(() => [])
+              )
+            ).then((arrs) => arrs.flat());
 
         const [alerts, rows] = await Promise.all([alertsPromise, rowsPromise]);
         if (alive) setData({ rows, alerts });
@@ -66,7 +73,7 @@ export function useCumplimiento() {
       }
     })();
     return () => { alive = false; };
-  }, [filters.zoneId, filters.from, filters.to]);
+  }, [filters.zoneId, filters.from, filters.to, zones]);
 
   return { filters, setFilters, zones, rows: data.rows, alerts: data.alerts, loading, error };
 }

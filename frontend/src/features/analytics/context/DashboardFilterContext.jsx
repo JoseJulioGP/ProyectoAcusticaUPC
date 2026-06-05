@@ -11,7 +11,9 @@ const isoDaysAgo = (n) => {
 };
 
 export function DashboardFilterProvider({ children }) {
-  const [from, setFrom] = useState(isoDaysAgo(30));
+  // Por defecto el último año: las mediciones suelen tener fechas anteriores a
+  // los últimos 30 días, y con 30 días el dashboard salía todo en cero.
+  const [from, setFrom] = useState(isoDaysAgo(365));
   const [to, setTo] = useState(isoNow());
   const [zoneId, setZoneId] = useState(null); // null = todas
   const [period, setPeriod] = useState(null); // null = ambos
