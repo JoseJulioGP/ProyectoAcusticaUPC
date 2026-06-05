@@ -1,5 +1,7 @@
 package com.upc.acusticupc.ingestion.application.service;
 
+import com.upc.acusticupc.ingestion.domain.model.IngestionFolder;
+import com.upc.acusticupc.ingestion.domain.repository.IngestionFolderRepository;
 import com.upc.acusticupc.shared.exception.ResourceNotFoundException;
 import com.upc.acusticupc.shared.util.DateRangeUtil;
 import com.upc.acusticupc.sonometry.domain.model.BatchStatus;
@@ -28,6 +30,7 @@ public class BatchManagementService {
     private final AlertRepository alertRepository;
     private final ComplianceResultRepository complianceResultRepository;
     private final KpiCacheInvalidator kpiCacheInvalidator;
+    private final IngestionFolderRepository folderRepository;
 
     @Transactional
     public MeasurementBatch retry(UUID id) {
@@ -44,6 +47,27 @@ public class BatchManagementService {
         log.info("Batch {} re-encolado a PENDING por acción admin", id);
         if (b.getZone() != null) b.getZone().getName();   // ← inicializa la zona antes de salir
         return batchRepository.save(b);
+    }
+
+    @Transactional
+    public void updateObservation(UUID batchId, String observation) {
+        MeasurementBatch b = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch", batchId));
+        b.setObservation(observation);
+        batchRepository.save(b);
+        log.info("Observación actualizada para batch {}", batchId);
+    }
+
+    @Transactional
+    public void moveToFolder(UUID batchId, UUID folderId) {
+        MeasurementBatch b = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch", batchId));
+        IngestionFolder folder = (folderId == null) ? null
+                : folderRepository.findById(folderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Folder", folderId));
+        b.setFolder(folder);
+        batchRepository.save(b);
+        log.info("Batch {} movido a carpeta {}", batchId, folderId);
     }
 
     @Transactional

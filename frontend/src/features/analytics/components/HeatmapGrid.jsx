@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useHeatmap } from '../hooks/useHeatmap';
 import { Card } from '@/ui/primitives';
 
@@ -17,75 +18,108 @@ const LEGEND = [
 ];
 
 export default function HeatmapGrid() {
-  const { data, loading, error } = useHeatmap();
-
-  if (loading)
-    return <div className="h-72 bg-slate-100 animate-pulse rounded-xl2"></div>;
-  if (error)
-    return <div className="text-danger text-sm">Error al cargar el mapa</div>;
-  if (!data || data.zoneNames.length === 0)
-    return (
-      <div className="h-72 flex items-center justify-center text-muted text-sm">
-        Sin datos para el mapa de calor
-      </div>
-    );
-
-  const { zoneNames, hours, laeqMatrix, exceedanceMatrix } = data;
+  const [day, setDay] = useState(''); // '' = rango global; 'yyyy-mm-dd' = ese día
+  const override = day
+    ? { from: `${day}T00:00:00-05:00`, to: `${day}T23:59:59-05:00` }
+    : {};
+  const { data, loading, error } = useHeatmap(override);
 
   return (
     <Card className="overflow-x-auto">
-      <h3 className="font-display text-sm font-semibold text-ink mb-2">
-        Mapa de calor — LAeq por zona y hora del día
-      </h3>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {LEGEND.map(({ cls, dot, label }) => (
-          <span key={label}
-            className={`inline-flex items-center gap-1.5 text-xs font-body px-2.5 py-1 rounded-full font-semibold ${cls}`}>
-            <span className={`w-2 h-2 rounded-full inline-block ${dot}`} />
-            {label}
-          </span>
-        ))}
-      </div>
-      <table className="text-xs border-collapse">
-        <thead>
-          <tr>
-            <th className="text-left pr-2 sticky left-0 bg-white/95 font-body text-muted font-medium">
-              Zona / Hora
-            </th>
-            {hours.map((h) => (
-              <th key={h} className="px-1 py-1 font-body text-muted font-normal">
-                {String(h).padStart(2, '0')}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {zoneNames.map((zname, zi) => (
-            <tr key={zname}>
-              <td className="pr-2 py-1 font-body font-semibold text-ink sticky left-0 bg-white/95 whitespace-nowrap">
-                {zname}
-              </td>
-              {hours.map((h, hi) => {
-                const excess = exceedanceMatrix[zi][hi];
-                const laeq   = laeqMatrix[zi][hi];
-                return (
-                  <td
-                    key={h}
-                    className={`w-10 h-8 text-center rounded border border-white/50 ${colorFor(excess)}`}
-                    title={
-                      excess === -1
-                        ? 'Sin datos'
-                        : `${zname} · ${h}h\nLAeq: ${laeq} dB\nExceso: ${excess > 0 ? '+' : ''}${excess} dB`
-                    }
-                  >
-                    {excess === -1 ? '' : laeq.toFixed(0)}
-                  </td>
-                );
-              })}
-            </tr>
+      <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
+        <h3 className="font-display text-sm font-semibold text-ink">
+          Mapa de calor — LAeq por zona y hora del día
+          {day && (
+            <span className="ml-2 text-xs font-normal text-muted">
+              · {new Date(`${day}T00:00`).toLocaleDateString('es-CO', { dateStyle: 'long' })}
+            </span>
+          )}
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {LEGEND.map(({ cls, dot, label }) => (
+            <span key={label}
+              className={`inline-flex items-center gap-1.5 text-xs font-body px-2.5 py-1 rounded-full font-semibold ${cls}`}>
+              <span className={`w-2 h-2 rounded-full inline-block ${dot}`} />
+              {label}
+            </span>
           ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
+
+      {/* Selector de día compacto */}
+      <div className="flex items-center gap-2 mb-3">
+        <label className="text-xs font-medium text-slate-500">Día</label>
+        <input
+          type="date"
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-petroleo focus:outline-none focus:ring-2 focus:ring-petroleo/20"
+        />
+        {day && (
+          <button
+            type="button"
+            onClick={() => setDay('')}
+            className="text-xs font-medium text-petroleo hover:underline"
+          >
+            Ver rango completo
+          </button>
+        )}
+      </div>
+
+      <div className="overflow-x-auto">
+        {loading ? (
+          <div className="h-72 bg-slate-100 animate-pulse rounded-xl2" />
+        ) : error ? (
+          <div className="h-72 flex items-center justify-center text-danger text-sm">
+            Error al cargar el mapa
+          </div>
+        ) : !data || data.zoneNames.length === 0 ? (
+          <div className="h-72 flex items-center justify-center text-muted text-sm">
+            Sin datos para el {day ? 'día seleccionado' : 'mapa de calor'}
+          </div>
+        ) : (
+          <table className="text-xs border-collapse">
+            <thead>
+              <tr>
+                <th className="text-left pr-2 sticky left-0 bg-white/95 font-body text-muted font-medium">
+                  Zona / Hora
+                </th>
+                {data.hours.map((h) => (
+                  <th key={h} className="px-1 py-1 font-body text-muted font-normal">
+                    {String(h).padStart(2, '0')}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.zoneNames.map((zname, zi) => (
+                <tr key={zname}>
+                  <td className="pr-2 py-1 font-body font-semibold text-ink sticky left-0 bg-white/95 whitespace-nowrap">
+                    {zname}
+                  </td>
+                  {data.hours.map((h, hi) => {
+                    const excess = data.exceedanceMatrix[zi][hi];
+                    const laeq = data.laeqMatrix[zi][hi];
+                    return (
+                      <td
+                        key={h}
+                        className={`w-10 h-8 text-center rounded border border-white/50 ${colorFor(excess)}`}
+                        title={
+                          excess === -1
+                            ? 'Sin datos'
+                            : `${zname} · ${h}h\nLAeq: ${laeq} dB\nExceso: ${excess > 0 ? '+' : ''}${excess} dB`
+                        }
+                      >
+                        {excess === -1 ? '' : laeq.toFixed(0)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </Card>
   );
 }

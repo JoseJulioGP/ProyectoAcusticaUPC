@@ -37,10 +37,18 @@ export default function ZoneComparisonBars() {
       <h3 className="font-display text-sm font-semibold text-ink mb-3">
         Comparativa por zona — LAeq diurno vs nocturno
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(19,105,74,0.10)" />
-          <XAxis dataKey="zoneName" tick={{ fontSize: 11, fill: '#41524a' }} />
+          <XAxis
+            dataKey="zoneName"
+            interval={0}
+            angle={-22}
+            textAnchor="end"
+            height={72}
+            tick={{ fontSize: 10, fill: '#41524a' }}
+            tickFormatter={(v) => (v && v.length > 16 ? v.slice(0, 15) + '…' : v)}
+          />
           <YAxis
             label={{ value: 'dB(A)', angle: -90, position: 'insideLeft', fill: '#41524a' }}
             tick={{ fill: '#41524a' }}

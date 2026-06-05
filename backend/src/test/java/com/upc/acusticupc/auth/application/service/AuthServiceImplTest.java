@@ -2,6 +2,8 @@ package com.upc.acusticupc.auth.application.service;
 
 import com.upc.acusticupc.auth.application.dto.AuthResponse;
 import com.upc.acusticupc.auth.application.dto.LoginRequest;
+import com.upc.acusticupc.auth.application.dto.RegisterRequest;
+import com.upc.acusticupc.auth.application.dto.UserDTO;
 import com.upc.acusticupc.auth.domain.model.Role;
 import com.upc.acusticupc.auth.domain.model.User;
 import com.upc.acusticupc.auth.domain.repository.UserRepository;
@@ -10,6 +12,7 @@ import com.upc.acusticupc.shared.exception.DomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -78,5 +81,26 @@ class AuthServiceImplTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> service.login(new LoginRequest("admin@upc.edu.co", "x")));
         assertEquals("La cuenta está inactiva", ex.getMessage());
+    }
+
+    // ---------- Sprint 7 · cierre de escalada de privilegios ----------
+
+    @Test
+    void register_alwaysCreatesUserWithRoleViewer() {
+        when(userRepository.existsByEmailIgnoreCase("nuevo@upc.edu.co")).thenReturn(false);
+        when(passwordEncoder.encode("Password123")).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        // El DTO ya no acepta 'role'. Aunque se llame el servicio desde Java,
+        // el unico camino posible es construir RegisterRequest sin rol.
+        UserDTO created = service.register(
+                new RegisterRequest("Nuevo Usuario", "nuevo@upc.edu.co", "Password123"));
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        org.mockito.Mockito.verify(userRepository).save(captor.capture());
+        assertEquals(Role.VIEWER, captor.getValue().getRole(),
+                "register debe forzar siempre VIEWER, sin importar el body");
+        assertTrue(captor.getValue().isActive());
+        assertEquals(Role.VIEWER, created.role());
     }
 }

@@ -1,13 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MapPin, Upload, ShieldCheck, Users } from 'lucide-react';
+import { LayoutDashboard, MapPin, Map, Upload, ShieldCheck, ClipboardCheck, Users } from 'lucide-react';
 import { useRole } from '../../features/auth/hooks/useRole';
 import { Rombo } from '@/ui/Rombo';
+import { Radar } from '@/ui/Rings';
 
 const NAV = [
-  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
-  { to: '/zones',       label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'], disabled: true },
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'VIEWER'] },
+  { to: '/admin/zones', label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
+  { to: '/noise-map',   label: 'Mapa de ruido', icon: Map,            allow: ['ADMIN', 'VIEWER'] },
   { to: '/ingest',      label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
-  { to: '/compliance',  label: 'Cumplimiento', icon: ShieldCheck,     allow: ['ADMIN', 'ANALYST'] },
+  { to: '/alerts',      label: 'Alertas',      icon: ShieldCheck,     allow: ['ADMIN', 'VIEWER'] },
+  { to: '/compliance',  label: 'Cumplimiento', icon: ClipboardCheck,  allow: ['ADMIN', 'VIEWER'] },
   { to: '/admin/users', label: 'Usuarios',     icon: Users,           allow: ['ADMIN'] },
 ];
 
@@ -16,18 +19,23 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-60 flex flex-col"
+      className="w-60 flex flex-col relative overflow-hidden"
       style={{
         background:
           'radial-gradient(120% 80% at 20% 0%, #0f5840 0%, #0c4836 45%, #0a3327 100%)',
       }}
     >
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-white/10">
+      {/* Pulso radar animado de fondo */}
+      <div className="pointer-events-none absolute -bottom-16 -left-12 opacity-50">
+        <Radar color="#8FBE3D" size={220} count={3} />
+      </div>
+
+      <div className="relative z-10 flex items-center gap-2.5 px-5 py-5 border-b border-white/10">
         <Rombo size={26} gap="#0c4836" />
         <span className="font-display font-bold text-lg text-white">AcústicaUPC</span>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="relative z-10 flex-1 px-3 py-4 space-y-1">
         {NAV.filter(({ allow }) => role && allow.includes(role)).map(
           ({ to, label, icon: Icon, disabled }) =>
             disabled ? (
@@ -68,7 +76,7 @@ export default function Sidebar() {
         )}
       </nav>
 
-      <div className="px-5 py-3 text-xs font-body text-white/40 border-t border-white/10">
+      <div className="relative z-10 px-5 py-3 text-xs font-body text-white/40 border-t border-white/10">
         AcústicaUPC · v1.0.0 · Universidad Popular del Cesar · 2026
       </div>
     </aside>

@@ -68,11 +68,14 @@ public class AuthServiceImpl implements AuthService {
             throw new DomainException("Ya existe un usuario con ese email");
         }
 
+        // Sprint 7 — cierre de escalada de privilegios: el rol NUNCA viene del body.
+        // Cualquier autorregistro queda como VIEWER. El alta de ADMIN/ANALYST se hace
+        // a través de UserController (POST /api/v1/users, restringido a ADMIN).
         User user = User.builder()
                 .fullName(request.fullName())
                 .email(request.email().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.password()))
-                .role(request.role() != null ? request.role() : Role.VIEWER)
+                .role(Role.VIEWER)
                 .active(true)
                 .build();
 

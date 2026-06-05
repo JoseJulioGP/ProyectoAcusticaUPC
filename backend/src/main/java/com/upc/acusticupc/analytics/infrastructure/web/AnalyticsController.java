@@ -27,6 +27,7 @@ public class AnalyticsController {
     private final TimeSeriesService timeSeriesService;
     private final HeatmapService heatmapService;
     private final ZoneComparisonService zoneComparisonService;
+    private final TrendAnalyticsService trendAnalyticsService;
 
     @GetMapping("/kpis")
     @Timed("analytics.kpis")
@@ -106,6 +107,26 @@ public class AnalyticsController {
         return ResponseEntity.ok(
                 zoneComparisonService.compare(range.from(), range.to(), zoneIds, period)
         );
+    }
+
+    @GetMapping("/weekday")
+    @Timed("analytics.weekday")
+    public ResponseEntity<List<WeekdayStatDTO>> weekday(
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam int year,
+            @RequestParam int isoWeekFrom,
+            @RequestParam int isoWeekTo
+    ) {
+        return ResponseEntity.ok(trendAnalyticsService.weekday(zoneId, year, isoWeekFrom, isoWeekTo));
+    }
+
+    @GetMapping("/before-after")
+    @Timed("analytics.beforeAfter")
+    public ResponseEntity<BeforeAfterDTO> beforeAfter(
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam OffsetDateTime pivot
+    ) {
+        return ResponseEntity.ok(trendAnalyticsService.beforeAfter(zoneId, pivot));
     }
 
     // --- default range helper ---

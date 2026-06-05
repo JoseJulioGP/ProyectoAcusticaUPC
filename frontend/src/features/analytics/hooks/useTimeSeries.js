@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { analyticsApi } from "../api/analyticsApi";
 import { useDashboardFilter } from "../context/DashboardFilterContext";
 
-export function useTimeSeries({ granularity = "HOUR" } = {}) {
-  const { from, to, zoneId, period } = useDashboardFilter();
+export function useTimeSeries({ granularity = "HOUR", zoneId } = {}) {
+  const { from, to, zoneId: gZoneId, period } = useDashboardFilter();
+  // Si se pasa `zoneId` explícito, pisa el global ("" = todas las zonas).
+  const effectiveZone = zoneId !== undefined ? (zoneId || null) : gZoneId;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +15,7 @@ export function useTimeSeries({ granularity = "HOUR" } = {}) {
     setLoading(true);
     setError(null);
     analyticsApi
-      .timeseries({ from, to, zoneId, period, granularity })
+      .timeseries({ from, to, zoneId: effectiveZone, period, granularity })
       .then((res) => {
         if (!cancelled) setData(res);
       })
@@ -26,7 +28,7 @@ export function useTimeSeries({ granularity = "HOUR" } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [from, to, zoneId, period, granularity]);
+  }, [from, to, effectiveZone, period, granularity]);
 
   return { data, loading, error };
 }

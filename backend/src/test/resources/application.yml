@@ -1,0 +1,24 @@
+spring:
+  flyway:
+    enabled: false
+  datasource:
+    url: jdbc:h2:mem:acusticupc;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Propiedades de aplicación requeridas por los beans (JwtService, seeders).
+# Valores SOLO de test — nunca usar en producción.
+acusticupc:
+  jwt:
+    expiration-ms: 86400000
+  bootstrap:
+    admin-email: admin-test@local.test
+    admin-password: TestAdmin123!
+  security:
+    jwt-secret: THIS_IS_A_TEST_ONLY_SECRET_DO_NOT_USE_IN_PRODUCTION_XXXXX

@@ -1,14 +1,19 @@
 import { DashboardFilterProvider, useDashboardFilter } from "../context/DashboardFilterContext";
 import GlobalFilters from "../components/GlobalFilters";
 import KpiCard from "../components/KpiCard";
+import ProgressBar from "../components/ProgressBar";
 import LaeqTimeSeriesChart from "../components/LaeqTimeSeriesChart";
 import ZoneComparisonBars from "../components/ZoneComparisonBars";
 import HeatmapGrid from "../components/HeatmapGrid";
+import WeekdayChart from "../components/WeekdayChart";
+import BeforeAfterChart from "../components/BeforeAfterChart";
+import HourlySummary from "../components/HourlySummary";
 import { useKpis } from "../hooks/useKpis";
-import { useZonesStats } from "../hooks/useZonesStats";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "../../../shared/api/apiClient";
 import { downloadCompliancePdf } from "../api/reportsApi";
+import ExportExcelButton from "../components/ExportExcelButton";
 
 function ExportPdfButton() {
   const { from, to, zoneId } = useDashboardFilter();
@@ -28,53 +33,86 @@ function ExportPdfButton() {
 }
 
 function DashboardContent() {
-  const { period, from, to } = useDashboardFilter();
+  const { period, zoneId } = useDashboardFilter();
   const { data: kpis, loading: kpisLoading } = useKpis();
-  const { data: zonesStats, loading: zonesLoading } = useZonesStats();
+
+  const [zones, setZones] = useState([]);
+  useEffect(() => {
+    apiClient
+      .get("/zones")
+      .then((r) => setZones(Array.isArray(r.data) ? r.data : r.data.content ?? []))
+      .catch(() => setZones([]));
+  }, []);
 
   const standardDb = period === "NOCTURNO" ? 55 : 65;
+  // "Zonas activas" = zonas registradas activas (no depende del rango de fechas).
+  const activeZonesCount = zones.filter((z) => z.active !== false).length;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="acu-stagger p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-800">Dashboard de Acústica UPC</h1>
-        <ExportPdfButton />
+        <div className="flex items-center gap-2">
+          <ExportExcelButton />
+          <ExportPdfButton />
+        </div>
       </div>
 
       <GlobalFilters />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <KpiCard
-          label="Mediciones"
-          value={kpisLoading ? "—" : kpis.totalMeasurements.toLocaleString("es-CO")}
-          sub="En el rango seleccionado"
-          loading={kpisLoading}
-        />
-        <KpiCard
-          label="Zonas activas"
-          value={kpisLoading ? "—" : kpis.zonesActive}
-          sub="Con al menos una medición"
-          accent="blue"
-          loading={kpisLoading}
-        />
-        <KpiCard
-          label="Alertas"
-          value={kpisLoading ? "—" : kpis.alertsActive}
-          sub={
-            kpisLoading
-              ? "—"
-              : `${kpis.alertsBySeverity.CRITICA ?? 0} críticas · ${kpis.alertsBySeverity.MODERADA ?? 0} moderadas · ${kpis.alertsBySeverity.LEVE ?? 0} leves`
-          }
-          accent={kpis?.alertsActive > 0 ? "red" : "green"}
-          loading={kpisLoading}
-        />
-        <KpiCard
-          label="% Cumplimiento"
-          value={kpisLoading ? "—" : `${kpis.complianceRatePercent}%`}
-          sub="CUMPLE / total evaluados"
-          accent={kpis?.complianceRatePercent >= 80 ? "green" : "amber"}
-          loading={kpisLoading}
-        />
+        <Link to="/ingest" className="block">
+          <KpiCard
+            label="Mediciones"
+            value={kpis?.totalMeasurements}
+            sub="En el rango seleccionado"
+            accent="petroleo"
+            loading={kpisLoading}
+          />
+        </Link>
+        <Link to="/admin/zones" className="block">
+          <KpiCard
+            label="Zonas activas"
+            value={activeZonesCount}
+            sub="Zonas registradas activas"
+            accent="blue"
+            loading={kpisLoading && zones.length === 0}
+          />
+        </Link>
+        <Link to={`/alerts${zoneId ? `?zoneId=${encodeURIComponent(zoneId)}` : ""}`} className="block">
+          <KpiCard
+            label="Alertas"
+            value={kpis?.alertsActive}
+            accent="amber"
+            loading={kpisLoading}
+            footer={
+              kpisLoading || !kpis ? null : (
+                <div className="flex flex-wrap gap-x-3 gap-y-1 font-body text-xs font-semibold">
+                  <span className="whitespace-nowrap text-rose-600">● {kpis.alertsBySeverity.CRITICA ?? 0} críticas</span>
+                  <span className="whitespace-nowrap text-[#9a6212]">● {kpis.alertsBySeverity.MODERADA ?? 0} moderadas</span>
+                  <span className="whitespace-nowrap text-[#C98A12]">● {kpis.alertsBySeverity.LEVE ?? 0} leves</span>
+                </div>
+              )
+            }
+          />
+        </Link>
+        <Link to={`/alerts${zoneId ? `?zoneId=${encodeURIComponent(zoneId)}` : ""}`} className="block">
+          <KpiCard
+            label="% Cumplimiento"
+            value={kpis?.complianceRatePercent}
+            suffix="%"
+            accent="green"
+            loading={kpisLoading}
+            footer={
+              kpisLoading || !kpis ? null : (
+                <div>
+                  <ProgressBar pct={kpis.complianceRatePercent} />
+                  <span className="mt-1.5 block font-body text-[11px] text-muted">CUMPLE / total evaluados</span>
+                </div>
+              )
+            }
+          />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -82,50 +120,18 @@ function DashboardContent() {
         <ZoneComparisonBars />
       </div>
 
+      <h2 className="text-lg font-semibold text-slate-800 mb-3">Tendencias</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <WeekdayChart zones={zones} />
+        <BeforeAfterChart zones={zones} />
+      </div>
+
       <div className="mb-6">
         <HeatmapGrid />
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 p-4 mb-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Zonas — clic para detalle</h3>
-        {zonesLoading ? (
-          <div className="h-24 bg-slate-100 animate-pulse rounded"></div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {zonesStats.map((z) => (
-              <Link
-                key={z.zoneId}
-                to={`/dashboard/zones/${z.zoneId}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`}
-                className="block p-3 border border-slate-200 rounded hover:bg-slate-50"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-slate-800">{z.zoneName}</p>
-                    <p className="text-xs text-slate-500">
-                      Sector {z.sector} — {z.subsector}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded ${
-                      z.overallStatus === "CUMPLE"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {z.overallStatus}
-                  </span>
-                </div>
-                <div className="mt-2 text-xs text-slate-600 flex gap-3">
-                  <span>Día: {z.laeqDiurnoDb ?? "—"} / {z.standardDayDb} dB</span>
-                  <span>Noche: {z.laeqNocturnoDb ?? "—"} / {z.standardNightDb} dB</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  {z.measurements.toLocaleString("es-CO")} mediciones · {z.alertsCount} alertas
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
+      <div className="mb-6">
+        <HourlySummary zones={zones} />
       </div>
     </div>
   );
