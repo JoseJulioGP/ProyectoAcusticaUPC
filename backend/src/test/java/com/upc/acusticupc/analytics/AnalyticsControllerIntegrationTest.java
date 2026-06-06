@@ -102,6 +102,21 @@ class AnalyticsControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = "ANALYST")
+    void kpis_conAnalyst_returns200() throws Exception {
+        // Sprint 8: ANALYST ya no queda fuera de analytics (antes daba 403).
+        when(kpiService.computeKpis(any(), any(), any(), any())).thenReturn(
+                new DashboardKpisDTO(
+                        0L, 0, 0L, new EnumMap<>(AlertSeverity.class), 0.0,
+                        OffsetDateTime.now(), OffsetDateTime.now()
+                )
+        );
+
+        mockMvc.perform(get("/api/v1/analytics/kpis"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @WithMockUser(roles = "ADMIN")
     void zonesStats_conAdmin_returns200_yListaConTodasLasZonas() throws Exception {
         when(zoneStatsService.statsForAllZones(any(), any())).thenReturn(List.of(

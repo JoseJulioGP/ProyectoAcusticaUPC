@@ -77,6 +77,32 @@ class ComplianceControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = "ANALYST")
+    void analyst_puedeLeerAlertas_devuelve200() throws Exception {
+        // Sprint 8: ANALYST ya no queda fuera de compliance (antes daba 403).
+        when(alertRepository.findByTriggeredAtBetween(any(), any(), any()))
+                .thenReturn(Page.empty());
+
+        mockMvc.perform(get("/api/v1/compliance/alerts")
+                        .param("from", "2026-01-01T00:00:00-05:00")
+                        .param("to", "2026-12-31T23:59:59-05:00"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ANALYST")
+    void analyst_puedeLeerResultados_devuelve200() throws Exception {
+        when(resultRepository.findByZoneIdAndEvaluatedAtBetween(any(), any(), any(), any()))
+                .thenReturn(Page.empty());
+
+        mockMvc.perform(get("/api/v1/compliance/results")
+                        .param("zoneId", UUID.randomUUID().toString())
+                        .param("from", "2026-01-01T00:00:00-05:00")
+                        .param("to", "2026-12-31T23:59:59-05:00"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void sinToken_devuelve401() throws Exception {
         mockMvc.perform(get("/api/v1/compliance/alerts")
                         .param("from", "2026-01-01T00:00:00-05:00")
