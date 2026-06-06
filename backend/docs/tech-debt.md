@@ -4,74 +4,64 @@ Inventario de deudas técnicas reconocidas que NO se cerraron en el sprint actua
 
 ---
 
-## Sprint 7 — abierto
+## Sprint 8 — estado actualizado
 
-### D1 · Testcontainers bloqueado en Windows con Docker Desktop (WSL 2 engine)
+### D1 · Testcontainers bloqueado en Windows · sigue abierto, propuesta de cierre vía CI
 
-**Test afectado:** `AnalyticsTrendControllerIntegrationTest` (`@Disabled` desde Sprint 7 Dev 1).
+**Test afectado:** `AnalyticsTrendControllerIntegrationTest` (`@Disabled` desde Sprint 7, sigue así en Sprint 8).
 
-**Síntoma:**
-- `AnalyticsTrendControllerIntegrationTest` queries usan `EXTRACT(DOW FROM …)` que H2 no soporta. El IT se diseñó para correr contra Postgres real vía Testcontainers.
-- Docker Desktop con engine WSL 2 expone `//./pipe/dockerDesktopLinuxEngine`, pero `docker-java` (cliente de Testcontainers) sondea por defecto `//./pipe/docker_engine`.
-- Resultado: el contenedor no arranca, el test queda `@Disabled`.
+**Resumen:** ningún dev del equipo tiene Docker funcional para Testcontainers en su máquina local de Windows. Probado por Dev 1 (Sprint 7), Dev 2 (Sprint 7) y vuelto a probar en Sprint 8 (Dev 2). Mismo síntoma:
 
-**Estado en el repo:**
+```
+docker info → failed to connect to the docker API at
+  npipe:////./pipe/dockerDesktopLinuxEngine: el sistema no puede encontrar
+  el archivo especificado.
+docker version --format "{{.Server.Version}}" → server=  (vacío)
+```
 
-| Sprint | Dev | Máquina | ¿Funciona? |
-|---|---|---|---|
-| 7 | Dev 1 (Mario) | Windows + Docker Desktop WSL 2 | ❌ |
-| 7 | Dev 2 (JoseJulioGP) | Windows + Docker Desktop WSL 2 | ❌ (`docker info` falla con `open //./pipe/dockerDesktopLinuxEngine: El sistema no puede encontrar el archivo especificado`) |
+| Sprint | Dev | Máquina | Intento | ¿Funciona? |
+|---|---|---|---|---|
+| 7 | Dev 1 (Mario) | Windows + Docker Desktop WSL 2 | Toggle "Allow default Docker socket" | ❌ |
+| 7 | Dev 2 (JoseJulioGP) | Windows + Docker Desktop WSL 2 | `docker info` directo | ❌ |
+| 8 | Dev 2 (JoseJulioGP) | Windows + Docker Desktop WSL 2 | Re-intento `docker info` tras reinicio | ❌ (mismo error) |
 
-**Cómo intentar resolverlo (no probado verde aún):**
+**Propuesta de cierre (Sprint 9, CI/CD):** mover la ejecución de los IT que extienden `AbstractPostgresIT` a **GitHub Actions** con el runner `ubuntu-latest`, que trae Docker nativo (sin Docker Desktop, sin WSL 2). Esquema sugerido:
 
-1. En Docker Desktop: **Settings → Advanced → "Allow the default Docker socket to be used (requires password)" → Apply & Restart**.
-2. Alternativa: variable de entorno permanente en Windows:
-   ```
-   DOCKER_HOST=npipe:////./pipe/dockerDesktopLinuxEngine
-   ```
-3. Verificar con `docker info` desde una **terminal nueva** (no la sesión donde se cambió la variable).
-4. Confirmar también con un smoke test rápido: `docker run --rm hello-world`.
+```yaml
+# .github/workflows/test-postgres-it.yml
+name: Postgres-only IT
+on:
+  pull_request:
+    branches: [develop, main]
+jobs:
+  postgres-it:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 25 }
+      - name: Run Postgres-only ITs
+        working-directory: backend
+        run: mvn -B test -DforkCount=0 -Dgroups=postgres-only
+```
 
-**Cuando un dev consiga que pase verde en su máquina:**
+Pre-requisitos en el código antes de activar el workflow:
+1. Etiquetar los ITs que extienden `AbstractPostgresIT` con `@Tag("postgres-only")` (JUnit 5).
+2. Quitar `@Disabled` de `AnalyticsTrendControllerIntegrationTest`.
+3. Configurar surefire en el `pom.xml` para que `mvn test` por defecto **excluya** `postgres-only` (los devs locales sin Docker siguen verdes; el workflow específico los incluye con `-Dgroups`).
 
-- Quitar el `@Disabled` de `AnalyticsTrendControllerIntegrationTest`.
-- Correr `mvn test -DforkCount=0` localmente y confirmar.
-- Añadir las instrucciones que funcionaron al `README.md` del backend (sección "Tests" o "Setup").
-- Cerrar este punto en `tech-debt.md`.
-
-**Hasta entonces:** el test se queda en `@Disabled`. El CI no debe fallar por su ausencia — `mvn test` lo marca como `skipped`, no `failed`.
-
----
-
-### D2 · `ApiError` sin campo `code` estructurado
-
-**Estado:** abierto, pospuesto a Sprint 8 (opcional en Sprint 7).
-
-**Problema:**
-- Los códigos de error de dominio (`FOLDER_IN_USE`, `FOLDER_HAS_CHILDREN`, `ZONE_IN_USE`, `RATE_LIMITED`, etc.) viajan inline en el campo `message` del `ApiError`.
-- El frontend, para reaccionar a un caso concreto, tiene que parsear el `message` por texto. Frágil cuando se cambia el copy.
-
-**Propuesta:**
-- Añadir un campo `code` (String, nullable) al record `ApiError`.
-- Modificar los `@ExceptionHandler` para poblarlo cuando exista un código estable (por ahora: `RATE_LIMITED` ya lo tiene fuera del `ApiError` — el `RateLimitFilter` escribe `{"code":"RATE_LIMITED",…}` directo).
-- DTOs típicos: `FOLDER_IN_USE` (409), `FOLDER_HAS_CHILDREN` (409), `ZONE_IN_USE` (409), `MITIGATION_CODE_DUPLICATE` (409).
-
-**Por qué no se cierra en Sprint 7:**
-- Backward-compatible (campo nullable, no rompe consumidores actuales).
-- Pero altera la firma del record `ApiError` y, una vez añadido, hay que pasar por *todos* los handlers para decidir cuándo poblarlo. Encaja mejor con el Sprint 8 cuando el frontend lo necesite explícitamente.
+**Hasta entonces:** el test se queda `@Disabled`. La suite local `mvn test` lo marca como `skipped`, no `failed`.
 
 ---
 
-### D3 · ITs existentes usan H2, no Postgres real
+### D2 · `ApiError` sin campo `code` estructurado · ✅ CERRADO en Sprint 8
 
-**Estado:** abierto, pospuesto a Sprint 8.
+Cerrado en el commit 2 del Sprint 8. `ApiError` ahora tiene campo `code` nullable y los handlers de `IllegalStateException` (409) y `DomainException` (400) extraen el código del prefijo `^[A-Z][A-Z0-9_]*:` del `message`. Ver `backend/docs/sprint8-reports.md` para el detalle.
 
-**Resumen:**
-- Los 12+ ITs heredados se movieron a H2 en el blindaje del Sprint 7 (antes apuntaban a Supabase producción — bug crítico cerrado).
-- Verdes en H2 con `ddl-auto: create-drop` + Flyway off.
-- **Riesgo:** no validan SQL nativo Postgres-only. Ej.: el bug `log(integer, double precision)` del Sprint 4 no se atrapó en H2.
+---
 
-**Plan:**
-- Unificar todos los ITs a Testcontainers + Postgres en Sprint 8. Depende de cerrar D1 primero (Docker funcional en al menos una máquina de dev/CI).
+### D3 · ITs existentes usan H2, no Postgres real · sigue abierto
+
+Sin cambios respecto al Sprint 7. La unificación a Testcontainers depende de D1 (Docker funcional en al menos un entorno de ejecución — local o CI). La propuesta de CI de D1 desbloquea esta deuda también: una vez que el workflow `postgres-it` corra verde, se pueden migrar progresivamente los ITs que usan SQL nativo Postgres-only a `AbstractPostgresIT`.
 
 ---
