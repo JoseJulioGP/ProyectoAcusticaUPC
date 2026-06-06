@@ -12,4 +12,6 @@ public interface AuthService {
     UserDTO register(RegisterRequest request);
 
     UserDTO getCurrentUser(String email);
+
+    void changePassword(String email, String currentPassword, String newPassword);
 }

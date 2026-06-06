@@ -88,4 +88,16 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", email));
         return UserMapper.toDto(user);
     }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", email));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new DomainException("CURRENT_PASSWORD_INVALID: la contraseña actual es incorrecta");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }

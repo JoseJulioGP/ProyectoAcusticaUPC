@@ -129,13 +129,13 @@ class RoleEndpointAccessMatrixIntegrationTest {
             GET    | /api/v1/alerts                                         | VIEWER   | OK
             GET    | /api/v1/alerts                                         | ANON     | 401
 
-            # === /analytics (class-level hasAnyRole ADMIN,VIEWER -> ANALYST 403) ===
+            # === /analytics (Sprint 8: class-level hasAnyRole ADMIN,ANALYST,VIEWER -> ANALYST OK) ===
             GET    | /api/v1/analytics/weekday                              | ADMIN    | OK
-            GET    | /api/v1/analytics/weekday                              | ANALYST  | 403
+            GET    | /api/v1/analytics/weekday                              | ANALYST  | OK
             GET    | /api/v1/analytics/weekday                              | VIEWER   | OK
             GET    | /api/v1/analytics/weekday                              | ANON     | 401
             GET    | /api/v1/analytics/before-after                         | ADMIN    | OK
-            GET    | /api/v1/analytics/before-after                         | ANALYST  | 403
+            GET    | /api/v1/analytics/before-after                         | ANALYST  | OK
             GET    | /api/v1/analytics/before-after                         | VIEWER   | OK
             GET    | /api/v1/analytics/before-after                         | ANON     | 401
 

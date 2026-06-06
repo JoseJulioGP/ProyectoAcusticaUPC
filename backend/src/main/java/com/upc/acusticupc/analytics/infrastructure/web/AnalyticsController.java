@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/analytics")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+@PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
 public class AnalyticsController {
 
     private final KpiService kpiService;
