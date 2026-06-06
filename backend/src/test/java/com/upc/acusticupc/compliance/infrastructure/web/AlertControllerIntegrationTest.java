@@ -45,7 +45,7 @@ class AlertControllerIntegrationTest {
     private AlertResponse sample() {
         return new AlertResponse(UUID.randomUUID(), UUID.randomUUID(), "Bloque A",
                 OffsetDateTime.parse("2026-04-01T22:00:00-05:00"), "NOCTURNO",
-                72.5, 50.0, 22.5, "CRITICA");
+                72.5, 50.0, 22.5, "CRITICA", null);
     }
 
     @Test
