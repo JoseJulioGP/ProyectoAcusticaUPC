@@ -14,13 +14,16 @@ public record AlertResponse(
         double measuredDb,
         double standardDb,
         double excessDb,
-        String severity
+        String severity,
+        String observation
 ) {
     public static AlertResponse from(Alert a) {
         double measured = a.getMeasuredDb().doubleValue();
         double standard = a.getStandardDb().doubleValue();
         // excessDb es columna generada en la BD; si viniera null (p. ej. en H2) se recalcula.
         double excess = (a.getExcessDb() != null) ? a.getExcessDb().doubleValue() : measured - standard;
+        // Sprint 8: observation del batch que disparó la alerta (puede no estar ligada a batch).
+        String observation = (a.getBatch() != null) ? a.getBatch().getObservation() : null;
         return new AlertResponse(
                 a.getId(),
                 a.getZone().getId(),
@@ -30,7 +33,8 @@ public record AlertResponse(
                 measured,
                 standard,
                 excess,
-                a.getSeverity().name()
+                a.getSeverity().name(),
+                observation
         );
     }
 }

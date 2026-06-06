@@ -2,6 +2,7 @@ package com.upc.acusticupc.ingestion.application.service;
 
 import com.upc.acusticupc.auth.domain.model.User;
 import com.upc.acusticupc.auth.domain.repository.UserRepository;
+import com.upc.acusticupc.compliance.application.service.ComplianceEngine;
 import com.upc.acusticupc.ingestion.application.dto.ParseResult;
 import com.upc.acusticupc.ingestion.domain.model.ExcelFormat;
 import com.upc.acusticupc.ingestion.domain.model.ParsedMeasurement;
@@ -55,6 +56,7 @@ public class SonometerIngestionService {
     private final PeriodResolver periodResolver;
     private final MeasurementBulkPersister bulkPersister;
     private final YearRangeValidator yearValidator;
+    private final ComplianceEngine complianceEngine;
 
     /**
      * Llamado sincrónicamente por el controller. Crea el batch y devuelve su UUID
@@ -112,6 +114,9 @@ public class SonometerIngestionService {
             completeBatch(batchId, result.totalRows(), validInserted, totalRejected);
             log.info("Batch {} completado: {} válidas, {} rechazadas (parser: {}, año: {})",
                     batchId, validInserted, totalRejected, result.rejectedRows(), yearRejections);
+
+            // Sprint 8 — auto-cálculo de cumplimiento al ingerir (RF principal).
+            triggerAutoCompliance(batchId, validInserted);
         } catch (Exception e) {
             log.error("Batch {} falló: {}", batchId, e.getMessage(), e);
             markStatus(batchId, BatchStatus.FAILED, e.getMessage());
@@ -171,6 +176,23 @@ public class SonometerIngestionService {
             batch.setErrorMessage(errorMessage.length() > 1000 ? errorMessage.substring(0, 1000) : errorMessage);
         }
         batchRepository.save(batch);
+    }
+
+    /**
+     * Sprint 8 — al finalizar el procesamiento exitoso del batch, dispara la
+     * evaluación de cumplimiento automáticamente. {@link ComplianceEngine#evaluateBatch}
+     * es {@code @Async} (fire-and-forget) y al terminar invalida la caché de KPIs
+     * desde ahí mismo, así que aquí no se vuelve a invalidar.
+     *
+     * <p>Si el batch quedó sin mediciones válidas, no hay nada que evaluar.</p>
+     */
+    void triggerAutoCompliance(UUID batchId, int validInserted) {
+        if (validInserted <= 0) {
+            log.info("Batch {} sin mediciones válidas; no se dispara cumplimiento", batchId);
+            return;
+        }
+        log.info("Disparando evaluación automática de cumplimiento para batch {}", batchId);
+        complianceEngine.evaluateBatch(batchId);
     }
 
     @Transactional
