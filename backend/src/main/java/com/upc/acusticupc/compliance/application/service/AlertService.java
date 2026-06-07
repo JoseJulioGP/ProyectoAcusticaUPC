@@ -21,7 +21,10 @@ public class AlertService {
     @Transactional(readOnly = true)
     public Page<AlertResponse> findAlerts(UUID zoneId, OffsetDateTime from, OffsetDateTime to,
                                           AlertSeverity severity, Pageable pageable) {
-        return alertRepository.search(zoneId, from, to, severity, pageable)
+        // Sprint 8 fix: el repo ahora exige severity como String (consulta nativa
+        // con CAST(:severity AS text) — ver AlertRepository.search).
+        String severityStr = (severity == null) ? null : severity.name();
+        return alertRepository.search(zoneId, from, to, severityStr, pageable)
                 .map(AlertResponse::from);
     }
 }
