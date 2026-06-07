@@ -37,7 +37,10 @@ public class KpiService {
                                         UUID zoneId,
                                         Period period) {
 
-        long totalMeasurements = measurementStatsRepository.countInRange(from, to, zoneId, period);
+        // Sprint 8 fix: countInRange ahora es nativa con CAST(:period AS text);
+        // pasamos el enum como string para que el cast en SQL funcione.
+        String periodStr = (period == null) ? null : period.name();
+        long totalMeasurements = measurementStatsRepository.countInRange(from, to, zoneId, periodStr);
         int zonesActive = measurementStatsRepository.countActiveZones(from, to);
 
         // Alertas
