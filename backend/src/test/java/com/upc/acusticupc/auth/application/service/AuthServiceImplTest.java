@@ -26,6 +26,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,5 +104,30 @@ class AuthServiceImplTest {
                 "register debe forzar siempre VIEWER, sin importar el body");
         assertTrue(captor.getValue().isActive());
         assertEquals(Role.VIEWER, created.role());
+    }
+
+    // ---------- Sprint 8 · cambio de contraseña propia ----------
+
+    @Test
+    void changePassword_conActualCorrecta_actualizaHash() {
+        when(userRepository.findByEmailIgnoreCase("admin@upc.edu.co")).thenReturn(Optional.of(admin));
+        when(passwordEncoder.matches("OldPass123", "hashed")).thenReturn(true);
+        when(passwordEncoder.encode("NuevaPass123")).thenReturn("hashed-nuevo");
+
+        service.changePassword("admin@upc.edu.co", "OldPass123", "NuevaPass123");
+
+        assertEquals("hashed-nuevo", admin.getPasswordHash());
+        verify(userRepository).save(admin);
+    }
+
+    @Test
+    void changePassword_conActualIncorrecta_lanzaDomainException() {
+        when(userRepository.findByEmailIgnoreCase("admin@upc.edu.co")).thenReturn(Optional.of(admin));
+        when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
+
+        DomainException ex = assertThrows(DomainException.class,
+                () -> service.changePassword("admin@upc.edu.co", "wrong", "NuevaPass123"));
+        assertTrue(ex.getMessage().contains("CURRENT_PASSWORD_INVALID"));
+        verify(userRepository, never()).save(any());
     }
 }

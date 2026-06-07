@@ -46,7 +46,7 @@ public class ComplianceController {
      * Resultados de cumplimiento de un batch (1 o 2: uno por period existente).
      */
     @GetMapping("/results/batch/{batchId}")
-    @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
     @Transactional(readOnly = true)
     public List<ComplianceResultDTO> getByBatch(@PathVariable UUID batchId) {
         return resultRepository.findByBatchId(batchId).stream()
@@ -58,7 +58,7 @@ public class ComplianceController {
      * Resultados por zona en un rango de fechas. Paginado.
      */
     @GetMapping("/results")
-    @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
     @Transactional(readOnly = true)
     public Page<ComplianceResultDTO> listResults(
             @RequestParam UUID zoneId,
@@ -74,7 +74,7 @@ public class ComplianceController {
      * Alertas (filtros opcionales). Paginado.
      */
     @GetMapping("/alerts")
-    @PreAuthorize("hasAnyRole('ADMIN','VIEWER')")
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
     @Transactional(readOnly = true)
     public Page<AlertDTO> listAlerts(
             @RequestParam(required = false) UUID zoneId,

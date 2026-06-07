@@ -6,9 +6,11 @@ import com.upc.acusticupc.analytics.domain.repository.MeasurementStatsRepository
 import com.upc.acusticupc.compliance.domain.model.AlertSeverity;
 import com.upc.acusticupc.compliance.domain.model.ComplianceStatus;
 import com.upc.acusticupc.compliance.domain.repository.ComplianceResultRepository;
+import com.upc.acusticupc.sonometry.domain.model.Period;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -100,5 +102,40 @@ class KpiServiceTest {
 
     private static <T> T eq(T value) {
         return org.mockito.ArgumentMatchers.eq(value);
+    }
+
+    // ---- Sprint 8 fix · regresión Postgres null-typed-param ----
+    // El repo cambió a nativa con CAST(:period AS text); KpiService debe traducir
+    // el enum Period a String (Period.name() o null). H2 no reproduce el bug de
+    // Postgres, pero estos tests blindan la conversión.
+
+    @Test
+    void computeKpis_conPeriodNull_pasaStringNullAlRepo() {
+        ArgumentCaptor<String> periodCaptor = ArgumentCaptor.forClass(String.class);
+        when(measurementStatsRepository.countInRange(any(), any(), any(), periodCaptor.capture()))
+                .thenReturn(0L);
+        when(measurementStatsRepository.countActiveZones(any(), any())).thenReturn(0);
+        when(alertStatsRepository.countBySeverityInRange(any(), any())).thenReturn(List.of());
+        when(complianceResultRepository.countInRange(any(), any())).thenReturn(0L);
+        when(complianceResultRepository.countInRangeByStatus(any(), any(), any())).thenReturn(0L);
+
+        kpiService.computeKpis(from, to, null, null);
+
+        assertThat(periodCaptor.getValue()).isNull();
+    }
+
+    @Test
+    void computeKpis_conPeriodDIURNO_pasaStringDIURNOAlRepo() {
+        ArgumentCaptor<String> periodCaptor = ArgumentCaptor.forClass(String.class);
+        when(measurementStatsRepository.countInRange(any(), any(), any(), periodCaptor.capture()))
+                .thenReturn(0L);
+        when(measurementStatsRepository.countActiveZones(any(), any())).thenReturn(0);
+        when(alertStatsRepository.countBySeverityInRange(any(), any())).thenReturn(List.of());
+        when(complianceResultRepository.countInRange(any(), any())).thenReturn(0L);
+        when(complianceResultRepository.countInRangeByStatus(any(), any(), any())).thenReturn(0L);
+
+        kpiService.computeKpis(from, to, null, Period.DIURNO);
+
+        assertThat(periodCaptor.getValue()).isEqualTo("DIURNO");
     }
 }

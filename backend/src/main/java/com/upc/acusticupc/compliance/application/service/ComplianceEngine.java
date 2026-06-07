@@ -3,6 +3,7 @@ package com.upc.acusticupc.compliance.application.service;
 import com.upc.acusticupc.compliance.application.calculator.L90Calculator;
 import com.upc.acusticupc.compliance.application.calculator.LAeqCalculator;
 import com.upc.acusticupc.compliance.domain.model.*;
+import com.upc.acusticupc.analytics.application.service.KpiCacheInvalidator;
 import com.upc.acusticupc.compliance.domain.repository.AlertRepository;
 import com.upc.acusticupc.compliance.domain.repository.ComplianceResultRepository;
 import com.upc.acusticupc.compliance.domain.repository.NoiseStandardRepository;
@@ -36,6 +37,7 @@ public class ComplianceEngine {
     private final AlertRepository alertRepository;
     private final LAeqCalculator laeqCalculator;
     private final L90Calculator l90Calculator;
+    private final KpiCacheInvalidator kpiCacheInvalidator;
 
     /**
      * Evalua un batch ya COMPLETED. Por cada period (DIURNO/NOCTURNO) que tenga
@@ -50,6 +52,11 @@ public class ComplianceEngine {
     public void evaluateBatch(UUID batchId) {
         MeasurementBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch", batchId));
+
+        // Sprint 8 — idempotencia: borrar evaluación previa de este batch antes de recalcular.
+        // Orden: Alert antes que ComplianceResult (Alert.complianceResult FK -> ComplianceResult).
+        alertRepository.deleteByBatchId(batchId);
+        resultRepository.deleteByBatchId(batchId);
 
         Zone zone = batch.getZone();
         log.info("Evaluando cumplimiento batch={} zona={}", batchId, zone.getName());
@@ -70,7 +77,11 @@ public class ComplianceEngine {
             evaluatePeriod(batch, zone, e.getKey(), e.getValue());
             evaluated++;
         }
-        log.info("Cumplimiento batch={} evaluado: {} period(s)", batchId, evaluated);
+
+        // Sprint 8: tras recalcular, invalidar la caché de KPIs del dashboard.
+        kpiCacheInvalidator.invalidateAll();
+
+        log.info("Cumplimiento batch={} evaluado: {} period(s); cache KPI invalidada", batchId, evaluated);
     }
 
     private ComplianceResult evaluatePeriod(MeasurementBatch batch, Zone zone,

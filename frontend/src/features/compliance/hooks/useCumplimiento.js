@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import apiClient from '@/shared/api/apiClient';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const monthAgo = () => {
@@ -32,8 +32,8 @@ export function useCumplimiento() {
 
   useEffect(() => {
     let alive = true;
-    api.get('/zones')
-      .then((z) => { if (alive) setZones(Array.isArray(z) ? z : (z?.content ?? [])); })
+    apiClient.get('/zones')
+      .then((r) => { const z = r.data; if (alive) setZones(Array.isArray(z) ? z : (z?.content ?? [])); })
       .catch(() => { if (alive) setZones([]); });
     return () => { alive = false; };
   }, []);
@@ -49,17 +49,17 @@ export function useCumplimiento() {
 
         const alertsParams = { from, to };
         if (filters.zoneId !== 'todas') alertsParams.zoneId = filters.zoneId;
-        const alertsPromise = api.get('/compliance/alerts', { params: alertsParams })
-          .then((r) => r?.content ?? []);
+        const alertsPromise = apiClient.get('/compliance/alerts', { params: alertsParams })
+          .then((r) => r.data?.content ?? []);
 
         // /compliance/results exige zoneId → para "todas" pedimos por cada zona y combinamos.
         const rowsPromise = (filters.zoneId !== 'todas')
-          ? api.get('/compliance/results', { params: { from, to, zoneId: filters.zoneId, size: 100 } })
-              .then((r) => r?.content ?? [])
+          ? apiClient.get('/compliance/results', { params: { from, to, zoneId: filters.zoneId, size: 100 } })
+              .then((r) => r.data?.content ?? [])
           : Promise.all(
               zones.map((z) =>
-                api.get('/compliance/results', { params: { from, to, zoneId: z.id, size: 100 } })
-                  .then((r) => r?.content ?? [])
+                apiClient.get('/compliance/results', { params: { from, to, zoneId: z.id, size: 100 } })
+                  .then((r) => r.data?.content ?? [])
                   .catch(() => [])
               )
             ).then((arrs) => arrs.flat());
@@ -67,7 +67,7 @@ export function useCumplimiento() {
         const [alerts, rows] = await Promise.all([alertsPromise, rowsPromise]);
         if (alive) setData({ rows, alerts });
       } catch (e) {
-        if (alive) setError(e?.message ?? 'Error al cargar cumplimiento');
+        if (alive) setError(e?.response?.data?.message ?? e?.message ?? 'Error al cargar cumplimiento');
       } finally {
         if (alive) setLoading(false);
       }

@@ -25,29 +25,29 @@ export default function GlobalFilters() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
-      <div className="flex flex-wrap gap-4 items-end">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
+        <div className="w-full sm:w-auto">
           <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
           <input
             type="datetime-local"
-            className="border border-slate-300 rounded px-2 py-1 text-sm"
+            className="w-full sm:w-auto border border-slate-300 rounded px-2 py-1 text-sm"
             value={from.slice(0, 16)}
             onChange={(e) => setFrom(new Date(e.target.value).toISOString())}
           />
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
           <input
             type="datetime-local"
-            className="border border-slate-300 rounded px-2 py-1 text-sm"
+            className="w-full sm:w-auto border border-slate-300 rounded px-2 py-1 text-sm"
             value={to.slice(0, 16)}
             onChange={(e) => setTo(new Date(e.target.value).toISOString())}
           />
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <label className="block text-xs font-medium text-slate-600 mb-1">Zona</label>
           <select
-            className="border border-slate-300 rounded px-2 py-1 text-sm"
+            className="w-full sm:w-auto border border-slate-300 rounded px-2 py-1 text-sm"
             value={zoneId ?? ""}
             onChange={(e) => setZoneId(e.target.value || null)}
           >
@@ -59,10 +59,10 @@ export default function GlobalFilters() {
             ))}
           </select>
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <label className="block text-xs font-medium text-slate-600 mb-1">Período</label>
           <select
-            className="border border-slate-300 rounded px-2 py-1 text-sm"
+            className="w-full sm:w-auto border border-slate-300 rounded px-2 py-1 text-sm"
             value={period ?? ""}
             onChange={(e) => setPeriod(e.target.value || null)}
           >
@@ -73,7 +73,7 @@ export default function GlobalFilters() {
             ))}
           </select>
         </div>
-        <div className="flex gap-2 items-end">
+        <div className="flex flex-wrap gap-2 items-end">
           {presets.map((p) => (
             <button
               key={p.id}

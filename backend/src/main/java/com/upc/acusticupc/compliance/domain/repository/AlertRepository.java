@@ -1,7 +1,6 @@
 package com.upc.acusticupc.compliance.domain.repository;
 
 import com.upc.acusticupc.compliance.domain.model.Alert;
-import com.upc.acusticupc.compliance.domain.model.AlertSeverity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,18 +20,33 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
     Page<Alert> findByTriggeredAtBetween(
         OffsetDateTime from, OffsetDateTime to, Pageable pageable);
 
-    /** Drilldown con filtros todos opcionales (zona, rango temporal, severidad). */
-    @Query("""
-        SELECT a FROM Alert a
-        WHERE (:zoneId IS NULL OR a.zone.id = :zoneId)
-          AND (:from IS NULL OR a.triggeredAt >= :from)
-          AND (:to IS NULL OR a.triggeredAt <= :to)
-          AND (:severity IS NULL OR a.severity = :severity)
-        """)
+    /**
+     * Drilldown con filtros todos opcionales (zona, rango temporal, severidad).
+     *
+     * <p>Sprint 8 fix: nativa con CAST explícito. Postgres no puede inferir el
+     * tipo de un parámetro {@code null} sin tipo, lo que rompía /alerts y el
+     * buildNoConformidades del Excel/PDF al pasar zoneId/severity en null. El
+     * llamante pasa {@code severity.name()} o {@code null}.</p>
+     */
+    @Query(value = """
+        SELECT * FROM alerts a
+        WHERE (CAST(:zoneId AS uuid) IS NULL OR a.zone_id = CAST(:zoneId AS uuid))
+          AND (CAST(:from AS timestamptz) IS NULL OR a.triggered_at >= CAST(:from AS timestamptz))
+          AND (CAST(:to AS timestamptz) IS NULL OR a.triggered_at <= CAST(:to AS timestamptz))
+          AND (CAST(:severity AS text) IS NULL OR a.severity = CAST(:severity AS text))
+        """,
+        countQuery = """
+        SELECT count(*) FROM alerts a
+        WHERE (CAST(:zoneId AS uuid) IS NULL OR a.zone_id = CAST(:zoneId AS uuid))
+          AND (CAST(:from AS timestamptz) IS NULL OR a.triggered_at >= CAST(:from AS timestamptz))
+          AND (CAST(:to AS timestamptz) IS NULL OR a.triggered_at <= CAST(:to AS timestamptz))
+          AND (CAST(:severity AS text) IS NULL OR a.severity = CAST(:severity AS text))
+        """,
+        nativeQuery = true)
     Page<Alert> search(@Param("zoneId") UUID zoneId,
                        @Param("from") OffsetDateTime from,
                        @Param("to") OffsetDateTime to,
-                       @Param("severity") AlertSeverity severity,
+                       @Param("severity") String severity,
                        Pageable pageable);
 
     List<Alert> findByBatchId(UUID batchId);

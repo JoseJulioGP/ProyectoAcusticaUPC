@@ -1,7 +1,6 @@
 package com.upc.acusticupc.analytics.domain.repository;
 
 import com.upc.acusticupc.sonometry.domain.model.Measurement;
-import com.upc.acusticupc.sonometry.domain.model.Period;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,17 +14,22 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
     /**
      * Cuenta mediciones en rango (con filtros opcionales).
      * Rango: from inclusivo, to exclusivo — usar siempre con resolveRange().
+     *
+     * <p>Sprint 8 fix: nativa con CAST explícito porque Postgres no puede inferir
+     * el tipo de un parámetro {@code null} sin tipo (JPQL fallaba con "could not
+     * determine data type of parameter $3" cuando {@code zoneId}/{@code period}
+     * eran null). El llamante debe pasar {@code period.name()} o {@code null}.</p>
      */
-    @Query("""
-        SELECT COUNT(m) FROM Measurement m
-        WHERE m.measuredAt >= :from AND m.measuredAt < :to
-          AND (:zoneId IS NULL OR m.zone.id = :zoneId)
-          AND (:period IS NULL OR m.period = :period)
-        """)
+    @Query(value = """
+        SELECT COUNT(*) FROM measurements m
+        WHERE m.measured_at >= :from AND m.measured_at < :to
+          AND (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
+          AND (CAST(:period AS text) IS NULL OR m.period = CAST(:period AS text))
+        """, nativeQuery = true)
     long countInRange(@Param("from") OffsetDateTime from,
                       @Param("to") OffsetDateTime to,
                       @Param("zoneId") UUID zoneId,
-                      @Param("period") Period period);
+                      @Param("period") String period);
 
     /**
      * Cuántas zonas distintas tienen al menos una medición en el rango.
@@ -85,7 +89,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
     FROM measurements m
     WHERE m.measured_at >= :from AND m.measured_at < :to
       AND (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
-      AND (:period IS NULL OR m.period = :period)
+      AND (CAST(:period AS text) IS NULL OR m.period = CAST(:period AS text))
     GROUP BY bucket, m.zone_id, m.period
     ORDER BY bucket, m.zone_id
     """, nativeQuery = true)
@@ -107,7 +111,7 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
            count(*)                                             AS sample_count
     FROM measurements m
     WHERE m.measured_at >= :from AND m.measured_at < :to
-      AND (:period IS NULL OR m.period = :period)
+      AND (CAST(:period AS text) IS NULL OR m.period = CAST(:period AS text))
     GROUP BY m.zone_id, EXTRACT(HOUR FROM m.measured_at)
     """, nativeQuery = true)
     List<Object[]> laeqByZoneAndHour(@Param("from") OffsetDateTime from,

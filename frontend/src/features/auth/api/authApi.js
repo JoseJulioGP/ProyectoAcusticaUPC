@@ -20,4 +20,19 @@ export const authApi = {
     });
     return data;
   },
+
+  // Cambio de contraseña desde el LOGIN (sin sesión previa): se valida la
+  // contraseña actual haciendo login para obtener un token, y con ese token se
+  // llama al endpoint protegido /auth/change-password. No persiste el token.
+  changePasswordWithCredentials: async ({ identifier, currentPassword, newPassword }) => {
+    const { data } = await apiClient.post('/auth/login', {
+      email: identifier,
+      password: currentPassword,
+    });
+    await apiClient.patch(
+      '/auth/change-password',
+      { currentPassword, newPassword },
+      { headers: { Authorization: `Bearer ${data.token}` } }
+    );
+  },
 };

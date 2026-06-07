@@ -78,7 +78,7 @@ export default function AlertsPage() {
   }, [data, filters.severity]);
 
   return (
-    <div className="acu-stagger p-6">
+    <div className="acu-stagger">
       <h1 className="text-2xl font-bold mb-2">Alertas</h1>
       <p className="text-gray-600 mb-4">
         Alertas generadas cuando una zona supera el límite de la Resolución 0627 de 2006.

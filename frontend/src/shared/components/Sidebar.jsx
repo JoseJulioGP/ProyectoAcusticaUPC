@@ -1,25 +1,28 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MapPin, Map, Upload, ShieldCheck, ClipboardCheck, Users } from 'lucide-react';
+import { LayoutDashboard, MapPin, Map, Upload, ShieldCheck, ClipboardCheck, Users, X } from 'lucide-react';
 import { useRole } from '../../features/auth/hooks/useRole';
 import { Rombo } from '@/ui/Rombo';
 import { Radar } from '@/ui/Rings';
 
 const NAV = [
-  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'VIEWER'] },
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/admin/zones', label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
-  { to: '/noise-map',   label: 'Mapa de ruido', icon: Map,            allow: ['ADMIN', 'VIEWER'] },
+  { to: '/noise-map',   label: 'Mapa de ruido', icon: Map,            allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/ingest',      label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
-  { to: '/alerts',      label: 'Alertas',      icon: ShieldCheck,     allow: ['ADMIN', 'VIEWER'] },
-  { to: '/compliance',  label: 'Cumplimiento', icon: ClipboardCheck,  allow: ['ADMIN', 'VIEWER'] },
+  { to: '/alerts',      label: 'Alertas',      icon: ShieldCheck,     allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
+  { to: '/compliance',  label: 'Cumplimiento', icon: ClipboardCheck,  allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/admin/users', label: 'Usuarios',     icon: Users,           allow: ['ADMIN'] },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose }) {
   const { role } = useRole();
 
   return (
     <aside
-      className="w-60 flex flex-col relative overflow-hidden"
+      className={`w-60 flex flex-col overflow-hidden
+        fixed inset-y-0 left-0 z-40 transform transition-transform
+        md:relative md:translate-x-0
+        ${open ? 'translate-x-0' : '-translate-x-full'}`}
       style={{
         background:
           'radial-gradient(120% 80% at 20% 0%, #0f5840 0%, #0c4836 45%, #0a3327 100%)',
@@ -33,6 +36,15 @@ export default function Sidebar() {
       <div className="relative z-10 flex items-center gap-2.5 px-5 py-5 border-b border-white/10">
         <Rombo size={26} gap="#0c4836" />
         <span className="font-display font-bold text-lg text-white">AcústicaUPC</span>
+        {/* Cerrar drawer (solo móvil) */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar menú"
+          className="ml-auto text-white/70 hover:text-white md:hidden"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       <nav className="relative z-10 flex-1 px-3 py-4 space-y-1">
@@ -54,6 +66,7 @@ export default function Sidebar() {
               <NavLink
                 key={to}
                 to={to}
+                onClick={onClose}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body transition-colors ${
                     isActive
