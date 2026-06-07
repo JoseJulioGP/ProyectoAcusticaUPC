@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { api } from '@/lib/api';
+import apiClient from '@/shared/api/apiClient';
 import { useRole } from '@/features/auth/hooks/useRole';
 
 const POLL_INTERVAL_MS = 3000;
@@ -14,7 +14,7 @@ export function useIngesta() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get('/ingest/batches');
+      const { data } = await apiClient.get('/ingest/batches');
       setRows(data.content ?? data);
     } finally {
       setLoading(false);
@@ -31,18 +31,18 @@ export function useIngesta() {
   }, [rows, load]);
 
   const retry = async (id) => {
-    await api.post(`/ingest/batches/${id}/retry`);
+    await apiClient.post(`/ingest/batches/${id}/retry`);
     await load();
   };
 
   const markFailed = async (id) => {
-    await api.post(`/ingest/batches/${id}/fail`, { reason: 'Marcado como fallido manualmente' });
+    await apiClient.post(`/ingest/batches/${id}/fail`, { reason: 'Marcado como fallido manualmente' });
     await load();
   };
 
   const remove = async (id) => {
     if (!confirm('¿Eliminar esta ingesta? Se borrarán sus mediciones y se recalculará el dashboard.')) return;
-    await api.del(`/ingest/batches/${id}`);
+    await apiClient.delete(`/ingest/batches/${id}`);
     await load();
   };
 

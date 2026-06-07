@@ -8,6 +8,7 @@ export default function UploadDropZone({ onUploadSuccess }) {
   const [zones, setZones] = useState([]);
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [file, setFile] = useState(null);
+  const [observation, setObservation] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -43,9 +44,18 @@ export default function UploadDropZone({ onUploadSuccess }) {
     setError(null);
     try {
       const result = await ingestionApi.upload(file, selectedZoneId);
+      const obs = observation.trim();
+      if (obs) {
+        try {
+          await ingestionApi.updateObservation(result.batchId, obs);
+        } catch {
+          setError("La carga se inició, pero no se pudo guardar la observación.");
+        }
+      }
       onUploadSuccess?.(result);
       setFile(null);
       setSelectedZoneId("");
+      setObservation("");
     } catch (err) {
       setError(err.response?.data?.message ?? "Error al subir el archivo");
     } finally {
@@ -104,6 +114,22 @@ export default function UploadDropZone({ onUploadSuccess }) {
             </>
           )}
         </div>
+      </div>
+
+      {/* Observación: inconveniente o factor que pudo afectar el ruido */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Observación <span className="font-normal text-slate-400">(opcional)</span>
+        </label>
+        <textarea
+          value={observation}
+          onChange={(e) => setObservation(e.target.value)}
+          disabled={uploading}
+          rows={3}
+          maxLength={4000}
+          placeholder="¿Algún inconveniente o factor que pudo afectar el ruido durante la medición? (obra cercana, evento, tráfico inusual, falla del equipo…)"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        />
       </div>
 
       {error && (
