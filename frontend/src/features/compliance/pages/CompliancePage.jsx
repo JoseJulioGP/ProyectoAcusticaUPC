@@ -61,7 +61,8 @@ export function CompliancePage() {
         {rows.length === 0 && !loading ? (
           <Empty>Sin resultados en el rango.</Empty>
         ) : (
-          <table className="w-full text-[13px] font-body">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-[13px] font-body">
             <thead>
               <tr className="text-left text-muted border-b border-petroleo/10">
                 {filters.zoneId === 'todas' && <Th>Zona</Th>}
@@ -96,6 +97,7 @@ export function CompliancePage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 

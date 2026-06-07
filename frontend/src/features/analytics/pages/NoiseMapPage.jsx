@@ -7,10 +7,9 @@ import { analyticsApi } from "../api/analyticsApi";
 import { useRole } from "../../auth/hooks/useRole";
 import { useToast } from "../../../shared/ui/useToast";
 
-// Universidad Popular del Cesar — sede Valledupar (aprox). Centro del mapa.
-// Si el campus queda algo descentrado, ajusta estos valores [lat, lng].
-const UPC_CENTER = [10.4566, -73.2492];
-const DEFAULT_ZOOM = 17;
+// Universidad Popular del Cesar — sede Valledupar. Centro exacto del campus.
+const UPC_CENTER = [10.451190283052698, -73.26148004754796];
+const DEFAULT_ZOOM = 17.6;
 
 // mapX = longitud, mapY = latitud (reutilizamos los campos existentes de Zone).
 const hasPos = (z) => z.mapX != null && z.mapY != null;
@@ -110,7 +109,7 @@ export default function NoiseMapPage() {
   };
 
   return (
-    <div className="acu-stagger p-6 max-w-7xl mx-auto">
+    <div className="acu-stagger max-w-7xl mx-auto">
       <PageHead
         title="Mapa de ruido"
         sub="Zonas de la UPC ubicadas en el mapa, coloreadas por su cumplimiento en el rango seleccionado."

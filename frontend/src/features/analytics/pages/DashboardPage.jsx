@@ -49,10 +49,10 @@ function DashboardContent() {
   const activeZonesCount = zones.filter((z) => z.active !== false).length;
 
   return (
-    <div className="acu-stagger p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-slate-800">Dashboard de Acústica UPC</h1>
-        <div className="flex items-center gap-2">
+    <div className="acu-stagger max-w-7xl mx-auto">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard de Acústica UPC</h1>
+        <div className="flex flex-wrap items-center gap-2">
           <ExportExcelButton />
           <ExportPdfButton />
         </div>

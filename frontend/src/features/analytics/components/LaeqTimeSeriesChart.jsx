@@ -57,6 +57,8 @@ export default function LaeqTimeSeriesChart({ standardDb = 65 }) {
           <XAxis
             dataKey="bucket"
             tick={{ fontSize: 11, fill: '#41524a' }}
+            minTickGap={28}
+            interval="preserveStartEnd"
             tickFormatter={(v) =>
               new Date(v).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })
             }
