@@ -23,7 +23,7 @@ export default function AppRouter() {
         <Route
           path="/dashboard"
           element={
-            <RoleProtectedRoute allow={["ADMIN", "VIEWER"]}>
+            <RoleProtectedRoute allow={["ADMIN", "ANALYST", "VIEWER"]}>
               <Layout>
                 <DashboardPage />
               </Layout>
@@ -33,7 +33,7 @@ export default function AppRouter() {
         <Route
           path="/dashboard/zones/:zoneId"
           element={
-            <RoleProtectedRoute allow={["ADMIN", "VIEWER"]}>
+            <RoleProtectedRoute allow={["ADMIN", "ANALYST", "VIEWER"]}>
               <Layout>
                 <ZoneDetailPage />
               </Layout>
@@ -43,7 +43,7 @@ export default function AppRouter() {
         <Route
           path="/noise-map"
           element={
-            <RoleProtectedRoute allow={["ADMIN", "VIEWER"]}>
+            <RoleProtectedRoute allow={["ADMIN", "ANALYST", "VIEWER"]}>
               <Layout>
                 <NoiseMapPage />
               </Layout>
@@ -83,7 +83,7 @@ export default function AppRouter() {
         <Route
           path="/compliance"
           element={
-            <RoleProtectedRoute allow={["ADMIN", "VIEWER"]}>
+            <RoleProtectedRoute allow={["ADMIN", "ANALYST", "VIEWER"]}>
               <Layout>
                 <CompliancePage />
               </Layout>

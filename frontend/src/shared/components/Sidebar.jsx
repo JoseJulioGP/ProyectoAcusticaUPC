@@ -5,12 +5,12 @@ import { Rombo } from '@/ui/Rombo';
 import { Radar } from '@/ui/Rings';
 
 const NAV = [
-  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'VIEWER'] },
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/admin/zones', label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
-  { to: '/noise-map',   label: 'Mapa de ruido', icon: Map,            allow: ['ADMIN', 'VIEWER'] },
+  { to: '/noise-map',   label: 'Mapa de ruido', icon: Map,            allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/ingest',      label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
-  { to: '/alerts',      label: 'Alertas',      icon: ShieldCheck,     allow: ['ADMIN', 'VIEWER'] },
-  { to: '/compliance',  label: 'Cumplimiento', icon: ClipboardCheck,  allow: ['ADMIN', 'VIEWER'] },
+  { to: '/alerts',      label: 'Alertas',      icon: ShieldCheck,     allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
+  { to: '/compliance',  label: 'Cumplimiento', icon: ClipboardCheck,  allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/admin/users', label: 'Usuarios',     icon: Users,           allow: ['ADMIN'] },
 ];
 

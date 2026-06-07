@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import ChangePasswordModal from './ChangePasswordModal';
 import { Rombo } from '@/ui/Rombo';
 import { Rings, Radar } from '@/ui/Rings';
 import { useIsMobile } from '@/ui/useIsMobile';
@@ -111,6 +112,7 @@ export default function LoginForm() {
   const [error,       setError]       = useState('');
   const [submitting,  setSubmitting]  = useState(false);
   const [remember,    setRemember]    = useState(true);
+  const [pwOpen,      setPwOpen]      = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -221,11 +223,20 @@ export default function LoginForm() {
             </div>
           )}
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: FB, fontSize: 13.5, color: '#41524a', fontWeight: 500 }}>
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
-              style={{ width: 16, height: 16, accentColor: C.petroleo }} />
-            Recordar sesión
-          </label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: FB, fontSize: 13.5, color: '#41524a', fontWeight: 500 }}>
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: C.petroleo }} />
+              Recordar sesión
+            </label>
+            <button
+              type="button"
+              onClick={() => setPwOpen(true)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.petroleo, fontFamily: FB, fontSize: 13.5, fontWeight: 700, textDecoration: 'underline', padding: 0 }}
+            >
+              ¿Cambiar contraseña?
+            </button>
+          </div>
 
           <button
             type="submit"
@@ -274,6 +285,7 @@ export default function LoginForm() {
     }}>
       {Panel}
       {Form}
+      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
     </div>
   );
 }

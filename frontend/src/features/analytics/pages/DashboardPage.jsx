@@ -10,31 +10,61 @@ import BeforeAfterChart from "../components/BeforeAfterChart";
 import HourlySummary from "../components/HourlySummary";
 import { useKpis } from "../hooks/useKpis";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, FileText } from "lucide-react";
 import apiClient from "../../../shared/api/apiClient";
-import { downloadCompliancePdf } from "../api/reportsApi";
 import ExportExcelButton from "../components/ExportExcelButton";
+import ShareDashboardPdf from "../components/ShareDashboardPdf";
+import { buildCombinedPdf } from "../utils/combinedPdf";
 
-function ExportPdfButton() {
+const PERIOD_LABEL = { DIURNO: "Diurno", NOCTURNO: "Nocturno" };
+
+// Exporta el PDF combinado: reporte de cumplimiento del backend (primero) +
+// captura del dashboard (después).
+function ExportPdfButton({ targetRef }) {
   const { from, to, zoneId } = useDashboardFilter();
   const [busy, setBusy] = useState(false);
   const onClick = async () => {
+    if (!targetRef?.current || busy) return;
     setBusy(true);
-    try { await downloadCompliancePdf({ from, to, zoneId }); }
-    catch { alert("No se pudo generar el PDF."); }
-    finally { setBusy(false); }
+    try {
+      const { blob, filename } = await buildCombinedPdf({
+        node: targetRef.current,
+        from,
+        to,
+        zoneId,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert("No se pudo generar el PDF.");
+    } finally {
+      setBusy(false);
+    }
   };
   return (
-    <button onClick={onClick} disabled={busy}
-            className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:opacity-50">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className="inline-flex items-center gap-2 rounded bg-petroleo px-4 py-2 text-white hover:bg-petroleo/90 disabled:opacity-50"
+    >
+      {busy ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
       {busy ? "Generando…" : "Exportar PDF"}
     </button>
   );
 }
 
 function DashboardContent() {
-  const { period, zoneId } = useDashboardFilter();
+  const { from, to, period, zoneId } = useDashboardFilter();
   const { data: kpis, loading: kpisLoading } = useKpis();
+  const dashboardRef = useRef(null);
 
   const [zones, setZones] = useState([]);
   useEffect(() => {
@@ -48,13 +78,30 @@ function DashboardContent() {
   // "Zonas activas" = zonas registradas activas (no depende del rango de fechas).
   const activeZonesCount = zones.filter((z) => z.active !== false).length;
 
+  // Mensaje para compartir: refleja los filtros y KPIs que se ven ahora.
+  const zoneName = zoneId
+    ? zones.find((z) => z.id === zoneId)?.name ?? "Zona seleccionada"
+    : "Todas";
+  const sev = kpis?.alertsBySeverity ?? {};
+  const shareMessage = [
+    "AcústicaUPC — Dashboard",
+    `Periodo: ${PERIOD_LABEL[period] ?? "Ambos"} · Zona: ${zoneName} · ${from?.slice(0, 10)} a ${to?.slice(0, 10)}`,
+    kpis ? `• Mediciones: ${kpis.totalMeasurements}` : null,
+    `• Zonas activas: ${activeZonesCount}`,
+    kpis ? `• Alertas: ${kpis.alertsActive} (${sev.CRITICA ?? 0} críticas, ${sev.MODERADA ?? 0} moderadas, ${sev.LEVE ?? 0} leves)` : null,
+    kpis ? `• % Cumplimiento: ${kpis.complianceRatePercent}%` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return (
-    <div className="acu-stagger max-w-7xl mx-auto">
+    <div ref={dashboardRef} className="acu-stagger max-w-7xl mx-auto">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard de Acústica UPC</h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2" data-html2canvas-ignore>
           <ExportExcelButton />
-          <ExportPdfButton />
+          <ExportPdfButton targetRef={dashboardRef} />
+          <ShareDashboardPdf targetRef={dashboardRef} message={shareMessage} />
         </div>
       </div>
 
