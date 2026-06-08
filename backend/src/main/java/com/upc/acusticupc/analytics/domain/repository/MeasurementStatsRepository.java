@@ -144,15 +144,20 @@ public interface MeasurementStatsRepository extends JpaRepository<Measurement, U
      * Devuelve [day, avgDb, sampleCount, isBefore]. zoneId opcional.
      */
     @Query(value = """
-        SELECT date_trunc('day', m.measured_at)                      AS day,
-               avg(m.db_value)                                        AS avg_db,
-               count(*)                                               AS sample_count,
-               (m.measured_at < :pivot)                               AS is_before
-        FROM measurements m
-        WHERE (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
-        GROUP BY date_trunc('day', m.measured_at), (m.measured_at < :pivot)
-        ORDER BY day
-        """, nativeQuery = true)
-    List<Object[]> dailyAvgBeforeAfter(@Param("zoneId") UUID zoneId,
-                                       @Param("pivot") OffsetDateTime pivot);
+      SELECT date_trunc('day', t.measured_at) AS day,
+            avg(t.db_value)                  AS avg_db,
+            count(*)                         AS sample_count,
+            t.is_before                      AS is_before
+      FROM (
+          SELECT m.measured_at,
+                m.db_value,
+                (m.measured_at < :pivot) AS is_before
+          FROM measurements m
+          WHERE (CAST(:zoneId AS uuid) IS NULL OR m.zone_id = CAST(:zoneId AS uuid))
+      ) t
+      GROUP BY date_trunc('day', t.measured_at), t.is_before
+      ORDER BY day
+      """, nativeQuery = true)
+  List<Object[]> dailyAvgBeforeAfter(@Param("zoneId") UUID zoneId,
+                                    @Param("pivot") OffsetDateTime pivot);
 }
