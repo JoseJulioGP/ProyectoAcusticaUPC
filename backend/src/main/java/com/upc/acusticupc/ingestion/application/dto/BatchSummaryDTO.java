@@ -18,5 +18,6 @@ public record BatchSummaryDTO(
         Integer rejectedRows,
         String errorMessage,
         OffsetDateTime uploadedAt,
-        OffsetDateTime processedAt
+        OffsetDateTime processedAt,
+        String observation
 ) {}

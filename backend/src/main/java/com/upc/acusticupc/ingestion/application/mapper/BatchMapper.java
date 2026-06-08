@@ -18,7 +18,8 @@ public class BatchMapper {
                 batch.getRejectedRows(),
                 batch.getErrorMessage(),
                 batch.getUploadedAt(),
-                batch.getProcessedAt()
+                batch.getProcessedAt(),
+                batch.getObservation()
         );
     }
 }
