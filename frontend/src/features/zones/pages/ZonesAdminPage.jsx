@@ -13,8 +13,9 @@ import { Button } from "@/ui/primitives";
 
 export default function ZonesAdminPage() {
   const { zones, loading, error, reload } = useZones();
-  const { isAdmin, isAnalyst, isViewer } = useRole();
-  const canManage = isAdmin || isAnalyst;
+  const { isAdmin, isViewer } = useRole();
+  // Solo ADMIN gestiona zonas (crear/editar/borrar). ANALYST y VIEWER solo ven.
+  const canManage = isAdmin;
   // /analytics/zones/stats es ADMIN/VIEWER (no ANALYST) → solo lo pedimos para esos.
   const canViewStats = isAdmin || isViewer;
   const toast = useToast();

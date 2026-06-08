@@ -4,13 +4,17 @@ import { useRole } from '../../features/auth/hooks/useRole';
 import { Rombo } from '@/ui/Rombo';
 import { Radar } from '@/ui/Rings';
 
+// Visibilidad por rol, alineada con la autorización del backend:
+//  - VIEWER: solo analítica de lectura (Dashboard, Mapa, Alertas, Cumplimiento).
+//  - ANALYST: además gestiona Zonas (crear/editar permitido en backend).
+//  - ADMIN: además Ingesta (subir datos) y Usuarios.
 const NAV = [
   { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
-  { to: '/admin/zones', label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/noise-map',   label: 'Mapa de ruido', icon: Map,            allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
-  { to: '/ingest',      label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
   { to: '/alerts',      label: 'Alertas',      icon: ShieldCheck,     allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
   { to: '/compliance',  label: 'Cumplimiento', icon: ClipboardCheck,  allow: ['ADMIN', 'ANALYST', 'VIEWER'] },
+  { to: '/admin/zones', label: 'Zonas',        icon: MapPin,          allow: ['ADMIN', 'ANALYST'] },
+  { to: '/ingest',      label: 'Ingesta',      icon: Upload,          allow: ['ADMIN'] },
   { to: '/admin/users', label: 'Usuarios',     icon: Users,           allow: ['ADMIN'] },
 ];
 

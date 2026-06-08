@@ -143,7 +143,7 @@ function DashboardContent() {
             }
           />
         </Link>
-        <Link to={`/alerts${zoneId ? `?zoneId=${encodeURIComponent(zoneId)}` : ""}`} className="block">
+        <Link to="/compliance" className="block">
           <KpiCard
             label="% Cumplimiento"
             value={kpis?.complianceRatePercent}

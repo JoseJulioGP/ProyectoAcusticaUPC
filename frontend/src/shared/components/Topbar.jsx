@@ -1,10 +1,14 @@
-import { LogOut, User, Menu } from 'lucide-react';
+import { useState } from 'react';
+import { LogOut, User, Menu, KeyRound } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import ChangePasswordModal from '../../features/auth/components/ChangePasswordModal';
 
 export default function Topbar({ onMenuClick }) {
   const { user, logout } = useAuth();
+  const [pwOpen, setPwOpen] = useState(false);
 
   return (
+    <>
     <header className="h-14 bg-paper/85 backdrop-blur-sm border-b border-petroleo/10 flex items-center justify-between gap-2 px-4 md:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
         {/* Hamburguesa: abre el drawer (solo móvil) */}
@@ -34,6 +38,16 @@ export default function Topbar({ onMenuClick }) {
         </div>
 
         <button
+          onClick={() => setPwOpen(true)}
+          aria-label="Cambiar contraseña"
+          title="Cambiar contraseña"
+          className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-sm font-body text-ink2 hover:text-petroleo hover:bg-petroleo/10 rounded-lg transition-colors"
+        >
+          <KeyRound size={16} />
+          <span className="hidden sm:inline">Contraseña</span>
+        </button>
+
+        <button
           onClick={logout}
           aria-label="Salir"
           className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-sm font-body text-ink2 hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
@@ -43,5 +57,13 @@ export default function Topbar({ onMenuClick }) {
         </button>
       </div>
     </header>
+
+    <ChangePasswordModal
+      open={pwOpen}
+      onClose={() => setPwOpen(false)}
+      defaultIdentifier={user?.email ?? ''}
+      onSuccess={logout}
+    />
+    </>
   );
 }
