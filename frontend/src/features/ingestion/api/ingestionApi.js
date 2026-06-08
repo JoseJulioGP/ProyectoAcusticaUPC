@@ -7,6 +7,9 @@ export const ingestionApi = {
     formData.append("zoneId", zoneId);
     return apiClient.post("/ingest/batches", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      // Render (plan gratuito) puede arrancar en frío y el parseo del archivo
+      // tarda más que el timeout global de 15s, así que ampliamos solo aquí.
+      timeout: 90000,
     }).then((r) => r.data);
   },
 
