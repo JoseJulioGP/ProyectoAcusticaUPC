@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { complianceApi } from "../api/complianceApi";
-import { analyticsApi } from "../../analytics/api/analyticsApi";
 import { zonesApi } from "../../zones/api/zonesApi";
 import AlertSeverityBadge from "../components/AlertSeverityBadge";
-import AlertDetailModal from "../components/AlertDetailModal";
+import MitigationActions from "../components/MitigationActions";
+import BatchObservationNote from "../../ingestion/components/BatchObservationNote";
 
 const SEVERITIES = ["LEVE", "MODERADA", "CRITICA"];
 const PERIOD_LABEL = { DIURNO: "Diurno", NOCTURNO: "Nocturno" };
@@ -33,23 +34,10 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(false);
   const [zones, setZones] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [kpi, setKpi] = useState(null);
 
   useEffect(() => {
     zonesApi.list().then(setZones).catch(() => setZones([]));
   }, []);
-
-  // Número de cumplimiento (mismo rango/zona que los filtros).
-  useEffect(() => {
-    analyticsApi
-      .kpis({
-        zoneId: filters.zoneId || undefined,
-        from: filters.from + "T00:00:00-05:00",
-        to: filters.to + "T23:59:59-05:00",
-      })
-      .then(setKpi)
-      .catch(() => setKpi(null));
-  }, [filters]);
 
   useEffect(() => {
     setLoading(true);
@@ -85,14 +73,8 @@ export default function AlertsPage() {
         Haz clic en una fila para ver el detalle y las acciones recomendadas.
       </p>
 
-      {/* Resumen de cumplimiento */}
+      {/* Resumen de alertas */}
       <div className="flex flex-wrap gap-3 mb-4">
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 min-w-[140px]">
-          <p className="text-xs text-slate-500">Cumplimiento</p>
-          <p className="text-xl font-semibold text-slate-800">
-            {kpi ? `${kpi.complianceRatePercent}%` : "—"}
-          </p>
-        </div>
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 min-w-[140px]">
           <p className="text-xs text-slate-500">Alertas en el rango</p>
           <p className="text-xl font-semibold text-slate-800">
@@ -151,23 +133,51 @@ export default function AlertsPage() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((a) => (
-                <tr
-                  key={a.id}
-                  onClick={() => setSelected(a)}
-                  className="acu-trow border-b last:border-0 cursor-pointer"
-                >
-                  <td className="py-2 px-3">{fmt(a.triggeredAt)}</td>
-                  <td className="px-3">{a.zoneName}</td>
-                  <td className="px-3">{PERIOD_LABEL[a.period] ?? a.period}</td>
-                  <td className="px-3 text-right font-mono">{Number(a.measuredDb).toFixed(2)}</td>
-                  <td className="px-3 text-right font-mono">{Number(a.standardDb).toFixed(2)}</td>
-                  <td className="px-3 text-right font-mono font-semibold text-red-700">
-                    +{Number(a.excessDb).toFixed(2)}
-                  </td>
-                  <td className="px-3"><AlertSeverityBadge severity={a.severity} /></td>
-                </tr>
-              ))}
+              {visible.map((a) => {
+                const open = selected?.id === a.id;
+                return (
+                  <Fragment key={a.id}>
+                    <tr
+                      onClick={() => setSelected((cur) => (cur?.id === a.id ? null : a))}
+                      className={`acu-trow border-b last:border-0 cursor-pointer ${open ? "bg-slate-50" : ""}`}
+                    >
+                      <td className="py-2 px-3">{fmt(a.triggeredAt)}</td>
+                      <td className="px-3">{a.zoneName}</td>
+                      <td className="px-3">{PERIOD_LABEL[a.period] ?? a.period}</td>
+                      <td className="px-3 text-right font-mono">{Number(a.measuredDb).toFixed(2)}</td>
+                      <td className="px-3 text-right font-mono">{Number(a.standardDb).toFixed(2)}</td>
+                      <td className="px-3 text-right font-mono font-semibold text-red-700">
+                        +{Number(a.excessDb).toFixed(2)}
+                      </td>
+                      <td className="px-3">
+                        <span className="inline-flex items-center gap-1.5">
+                          <AlertSeverityBadge severity={a.severity} />
+                          <ChevronDown
+                            size={14}
+                            className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+                          />
+                        </span>
+                      </td>
+                    </tr>
+                    {open && (
+                      <tr className="border-b last:border-0 bg-slate-50">
+                        <td colSpan={7} className="px-3 pb-4 pt-1">
+                          <div className="space-y-4">
+                            <div>
+                              <h3 className="font-semibold text-slate-800 mb-1.5">Observación de la carga</h3>
+                              <BatchObservationNote batchId={a.batchId} />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-slate-800 mb-1.5">Acciones recomendadas</h3>
+                              <MitigationActions excessDb={a.excessDb} />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -198,8 +208,6 @@ export default function AlertsPage() {
           </div>
         </div>
       )}
-
-      <AlertDetailModal alert={selected} open={!!selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
 import { Card, PageHead, Field, Select, TextInput, Badge } from '@/ui/primitives';
 import { useCumplimiento } from '../hooks/useCumplimiento';
-import Modal from '../../../shared/ui/Modal';
-import MitigationActions from '../components/MitigationActions';
-import BatchObservationNote from '../../ingestion/components/BatchObservationNote';
 
 const PERIODO_LABEL = { DIURNO: 'Diurno', NOCTURNO: 'Nocturno' };
 
 export function CompliancePage() {
   const { filters, setFilters, zones, rows, loading, error } = useCumplimiento();
   const setF = (patch) => setFilters((f) => ({ ...f, ...patch }));
-  const [actionsFor, setActionsFor] = useState(null); // fila que excede, para ver acciones
+  // Solo se listan las zonas/periodos que cumplen la norma; los excesos y sus
+  // acciones correctivas viven en el panel de Alertas.
+  const okRows = rows.filter((r) => r.status === 'CUMPLE');
+  // % de cumplimiento = evaluaciones que cumplen / total evaluadas en el rango.
+  const rate = rows.length > 0 ? Math.round((okRows.length / rows.length) * 100) : 0;
 
   return (
     <div className="acu-stagger">
       <PageHead
         title="Cumplimiento"
-        sub="Resultados de evaluación frente a la Resolución 0627 de 2006 y alertas activas en el rango seleccionado."
+        sub="Zonas y periodos que cumplen la Resolución 0627 de 2006 en el rango seleccionado. Los excesos y sus acciones correctivas están en el panel de Alertas."
       />
+
+      <div className="mb-5 flex flex-wrap gap-3">
+        <div className="rounded-xl border border-petroleo/10 bg-white px-4 py-2.5 min-w-[150px]">
+          <p className="text-xs text-muted">Cumplimiento</p>
+          <p className="text-xl font-semibold text-ink">{loading ? '—' : `${rate}%`}</p>
+        </div>
+      </div>
 
       <Card className="mb-5">
         <div className="grid gap-4 md:grid-cols-3">
@@ -57,20 +64,20 @@ export function CompliancePage() {
       )}
 
       <Card>
-        <SectionTitle title="Resultados por zona / periodo" loading={loading} />
-        {rows.length === 0 && !loading ? (
-          <Empty>Sin resultados en el rango.</Empty>
+        <SectionTitle title="Zonas que cumplen la norma" loading={loading} />
+        {okRows.length === 0 && !loading ? (
+          <Empty>Ninguna zona cumple la norma en el rango seleccionado.</Empty>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-[13px] font-body">
+          <table className="w-full min-w-[480px] text-[13px] font-body">
             <thead>
               <tr className="text-left text-muted border-b border-petroleo/10">
                 {filters.zoneId === 'todas' && <Th>Zona</Th>}
-                <Th>Periodo</Th><Th>LAeq</Th><Th>L90</Th><Th>Estándar</Th><Th>Estado</Th><Th>Acciones</Th>
+                <Th>Periodo</Th><Th>LAeq</Th><Th>L90</Th><Th>Estándar</Th><Th>Estado</Th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {okRows.map((r) => (
                 <tr key={r.id} className="border-b border-petroleo/5">
                   {filters.zoneId === 'todas' && <Td>{r.zoneName}</Td>}
                   <Td>{PERIODO_LABEL[r.period] ?? r.period}</Td>
@@ -78,20 +85,7 @@ export function CompliancePage() {
                   <Td>{fmtDb(r.l90Db)}</Td>
                   <Td>{fmtDb(r.standardDb)}</Td>
                   <Td>
-                    <Badge kind={r.status}>{r.status === 'CUMPLE' ? 'Cumple' : 'Excede'}</Badge>
-                  </Td>
-                  <Td>
-                    {r.status !== 'CUMPLE' ? (
-                      <button
-                        type="button"
-                        onClick={() => setActionsFor(r)}
-                        className="font-semibold text-petroleo hover:underline"
-                      >
-                        Ver acciones
-                      </button>
-                    ) : (
-                      <span className="text-muted">—</span>
-                    )}
+                    <Badge kind={r.status}>Cumple</Badge>
                   </Td>
                 </tr>
               ))}
@@ -100,40 +94,6 @@ export function CompliancePage() {
           </div>
         )}
       </Card>
-
-      {/* Acciones correctivas / mitigación para una zona que excede */}
-      <Modal
-        open={!!actionsFor}
-        onClose={() => setActionsFor(null)}
-        title="Acciones correctivas recomendadas"
-        width={560}
-        footer={
-          <button
-            type="button"
-            onClick={() => setActionsFor(null)}
-            className="rounded-[11px] border-[1.5px] border-petroleo/15 px-4 py-2 text-sm font-semibold text-petroleo hover:bg-petroleo/[0.06]"
-          >
-            Cerrar
-          </button>
-        }
-      >
-        {actionsFor && (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-600">
-              <strong>{actionsFor.zoneName}</strong> · {PERIODO_LABEL[actionsFor.period] ?? actionsFor.period}
-              {" · "}Exceso <span className="font-semibold text-rose-700">+{fmtDb(actionsFor.excessDb)}</span>
-            </p>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-1.5">Observación de la carga</h3>
-              <BatchObservationNote batchId={actionsFor.batchId} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-1.5">Acciones recomendadas</h3>
-              <MitigationActions excessDb={actionsFor.excessDb} />
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

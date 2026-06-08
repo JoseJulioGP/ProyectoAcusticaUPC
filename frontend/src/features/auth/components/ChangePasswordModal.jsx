@@ -9,18 +9,24 @@ import { useToast } from "../../../shared/ui/useToast";
 const EMPTY = { identifier: "", current: "", next: "", confirm: "" };
 
 /**
- * Modal de cambio de contraseña desde el LOGIN (sin sesión activa).
- * Pide usuario/correo + contraseña actual + nueva. El flujo valida la actual
- * haciendo login y luego cambia la contraseña con ese token (ver authApi).
+ * Modal de cambio de contraseña. Pide usuario/correo + contraseña actual +
+ * nueva. El flujo valida la actual haciendo login y luego cambia la contraseña
+ * con ese token (ver authApi). Funciona igual desde el LOGIN (sin sesión) o
+ * estando autenticado en cualquier rol.
+ *
+ * Props opcionales:
+ *  - defaultIdentifier: precarga el campo usuario/correo (útil con sesión).
+ *  - onSuccess: callback tras cambiar la contraseña (p. ej. cerrar sesión).
  */
-export default function ChangePasswordModal({ open, onClose }) {
+export default function ChangePasswordModal({ open, onClose, defaultIdentifier = "", onSuccess }) {
   const toast = useToast();
-  const [form, setForm] = useState(EMPTY);
+  const initial = () => ({ ...EMPTY, identifier: defaultIdentifier });
+  const [form, setForm] = useState(initial);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const close = () => {
-    setForm(EMPTY);
+    setForm(initial());
     setError(null);
     onClose?.();
   };
@@ -50,6 +56,7 @@ export default function ChangePasswordModal({ open, onClose }) {
       });
       toast.success("Contraseña actualizada. Inicia sesión con la nueva.");
       close();
+      onSuccess?.();
     } catch (err) {
       const status = err.response?.status;
       const code = err.response?.data?.code;
